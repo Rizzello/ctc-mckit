@@ -35,7 +35,7 @@ jobs:
           php-version: '8.5'
           extensions: mbstring, dom, fileinfo, pdo_mysql
           coverage: none
-      - uses: ramsey/composer-install@v3
+      - uses: ramsey/composer-install@v4
         with:
           dependency-versions: locked
       - run: cp .env.example .env
