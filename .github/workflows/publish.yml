@@ -26,7 +26,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/metadata-action@v5
+      - uses: docker/metadata-action@v6
         id: app
         with:
           images: ghcr.io/${{ github.repository }}-app
@@ -41,7 +41,7 @@ jobs:
           push: true
           tags: ${{ steps.app.outputs.tags }}
           labels: ${{ steps.app.outputs.labels }}
-      - uses: docker/metadata-action@v5
+      - uses: docker/metadata-action@v6
         id: web
         with:
           images: ghcr.io/${{ github.repository }}-web
