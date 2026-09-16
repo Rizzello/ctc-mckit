@@ -1,0 +1,25 @@
+services:
+  app:
+    image: ghcr.io/rizzello/ctc-mckit-app:main
+    env_file: .env
+    restart: unless-stopped
+
+  web:
+    image: ghcr.io/rizzello/ctc-mckit-web:main
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    depends_on:
+      - app
+
+  worker:
+    image: ghcr.io/rizzello/ctc-mckit-app:main
+    command: php artisan queue:work --sleep=1 --tries=3 --timeout=120
+    env_file: .env
+    restart: unless-stopped
+
+  scheduler:
+    image: ghcr.io/rizzello/ctc-mckit-app:main
+    command: php artisan schedule:work
+    env_file: .env
+    restart: unless-stopped

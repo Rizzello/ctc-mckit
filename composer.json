@@ -6,7 +6,7 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.3",
+        "php": "^8.5",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
         "livewire/livewire": "^4.4"
@@ -37,7 +37,13 @@
         }
     },
     "scripts": {
-        "analyse": "phpstan analyse",
+        "lint": "pint --test",
+        "analyse": "phpstan analyse --memory-limit=1G",
+        "quality": [
+            "@lint",
+            "@analyse",
+            "@test"
+        ],
         "setup": [
             "composer install",
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
