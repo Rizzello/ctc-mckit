@@ -48,9 +48,7 @@ jobs:
           DB_DATABASE: testing
           DB_USERNAME: sail
           DB_PASSWORD: password
-      - run: composer lint
-      - run: composer analyse
-      - run: composer test
+      - run: composer ci
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
@@ -58,7 +56,6 @@ jobs:
           DB_DATABASE: testing
           DB_USERNAME: sail
           DB_PASSWORD: password
-      - run: composer audit
 
   frontend:
     runs-on: ubuntu-latest
