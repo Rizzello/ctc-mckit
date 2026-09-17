@@ -23,7 +23,7 @@ class LoginChallengeFactory extends Factory
             'otp_hash' => hash('sha256', fake()->uuid()),
             'magic_token_hash' => hash('sha256', fake()->uuid()),
             'attempts' => 0,
-            'expires_at' => now()->addMinutes(15),
+            'expires_at' => now()->addMinutes((int) config('auth.login.challenge_lifetime')),
             'consumed_at' => null,
         ];
     }

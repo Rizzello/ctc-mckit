@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\MagicLoginController;
 use App\Http\Middleware\EnsureOperationalAccess;
 use App\Models\ConferenceSession;
 use App\Models\User;
@@ -10,7 +11,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn (): RedirectResponse => redirect()->route('agenda'));
 
-Route::view('/login', 'guest.login')->name('login');
+Route::middleware('guest')->group(function (): void {
+    Route::view('/login', 'guest.login')->name('login');
+    Route::view('/login/code', 'guest.login-code')->name('login.code');
+    Route::get('/login/magic/{challenge}/{token}', MagicLoginController::class)
+        ->middleware('throttle:magic-login')
+        ->name('auth.magic');
+});
 
 Route::middleware(['auth', EnsureOperationalAccess::class])->group(function (): void {
     Route::view('/agenda', 'app.agenda')->name('agenda');
@@ -32,5 +39,5 @@ Route::post('/logout', function (Request $request): RedirectResponse {
     $request->session()->invalidate();
     $request->session()->regenerateToken();
 
-    return redirect()->route('login');
+    return redirect()->route('login')->with('success', 'Signed out.');
 })->middleware('auth')->name('logout');
