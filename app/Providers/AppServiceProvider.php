@@ -2,6 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\ConferenceSession;
+use App\Models\SessionNote;
+use App\Models\User;
+use App\Policies\ConferenceSessionPolicy;
+use App\Policies\SessionNotePolicy;
+use App\Policies\UserPolicy;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +26,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Gate::policy(ConferenceSession::class, ConferenceSessionPolicy::class);
+        Gate::policy(SessionNote::class, SessionNotePolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
+
+        Gate::define('view-operational-content', fn (User $user): bool => $user->enabled);
+        Gate::define('sync-sessionize', fn (User $user): bool => $user->enabled && $user->is_admin);
     }
 }
