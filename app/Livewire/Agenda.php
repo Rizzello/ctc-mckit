@@ -13,11 +13,11 @@ use Livewire\Component;
 
 class Agenda extends Component
 {
-    private const PIXELS_PER_MINUTE = 2;
+    private const PIXELS_PER_MINUTE = 3;
 
-    private const MINIMUM_SESSION_HEIGHT = 112;
+    private const MINIMUM_SESSION_HEIGHT = 96;
 
-    private const SESSION_GAP = 4;
+    private const MINIMUM_SERVICE_SESSION_HEIGHT = 64;
 
     #[Url]
     public ?string $date = null;
@@ -53,11 +53,16 @@ class Agenda extends Component
         $calendarStart = $firstStart === null ? null : CarbonImmutable::parse($firstStart)->startOfHour();
         $calendarEnd = $lastEnd === null ? null : CarbonImmutable::parse($lastEnd)->ceilHour();
         /** @var Collection<int, Room> $rooms */
-        $rooms = $conferenceSessions->pluck('room')->filter()->unique('id')->sortBy('name')->values();
+        $rooms = Room::query()->orderBy('name')->get();
         $positionedSessions = $calendarStart === null
             ? collect()
             : $rooms->mapWithKeys(fn (Room $room): array => [
-                $room->id => $this->positionSessions($conferenceSessions->where('room_id', $room->id), $calendarStart),
+                $room->id => $this->positionSessions(
+                    $conferenceSessions
+                        ->filter(fn (ConferenceSession $conferenceSession): bool => $conferenceSession->is_plenum_session || $conferenceSession->room_id === $room->id)
+                        ->values(),
+                    $calendarStart,
+                ),
             ]);
         $calendarHeights = [
             $calendarStart === null || $calendarEnd === null
@@ -76,6 +81,7 @@ class Agenda extends Component
             'calendarEnd' => $calendarEnd,
             'calendarHeight' => $calendarHeight,
             'currentUser' => $this->currentUser(),
+            'pixelsPerHour' => 60 * self::PIXELS_PER_MINUTE,
             'rooms' => $rooms,
             'positionedSessions' => $positionedSessions,
         ]);
@@ -96,10 +102,12 @@ class Agenda extends Component
             $scheduledTop = intdiv($startsAt->getTimestamp() - $calendarStart->getTimestamp(), 60) * self::PIXELS_PER_MINUTE;
             $height = max(
                 intdiv($endsAt->getTimestamp() - $startsAt->getTimestamp(), 60) * self::PIXELS_PER_MINUTE,
-                self::MINIMUM_SESSION_HEIGHT,
+                $conferenceSession->is_service_session
+                    ? self::MINIMUM_SERVICE_SESSION_HEIGHT
+                    : self::MINIMUM_SESSION_HEIGHT,
             );
             $top = max($scheduledTop, $bottom);
-            $bottom = $top + $height + self::SESSION_GAP;
+            $bottom = $top + $height;
 
             $positionedSessions[] = [
                 'conferenceSession' => $conferenceSession,

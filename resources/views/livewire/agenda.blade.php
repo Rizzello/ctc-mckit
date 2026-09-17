@@ -48,7 +48,7 @@
                         @for ($hour = 0; $hour < $hourCount; $hour++)
                             <div
                                 class="absolute w-full px-3 text-xs font-semibold text-slate-500"
-                                style="top: {{ $hour * 120 }}px;"
+                                style="top: {{ $hour * $pixelsPerHour }}px;"
                             >
                                 {{ $calendarStart->addHours($hour)->format('H:i') }}
                             </div>
@@ -58,20 +58,22 @@
                     @foreach ($rooms as $room)
                         <div class="relative border-l border-slate-200" aria-label="{{ $room->name }} schedule">
                             @for ($hour = 0; $hour <= $hourCount; $hour++)
-                                <div class="absolute inset-x-0 border-t border-slate-100" style="top: {{ $hour * 120 }}px;"></div>
+                                <div class="absolute inset-x-0 border-t border-slate-100" style="top: {{ $hour * $pixelsPerHour }}px;"></div>
                             @endfor
 
                             @foreach ($positionedSessions->get($room->id, collect()) as $positionedSession)
                                 @php($conferenceSession = $positionedSession['conferenceSession'])
                                 @php($isAssigned = $conferenceSession->mcs->contains('id', $currentUser->id))
+                                @php($isPlenum = $conferenceSession->is_plenum_session)
 
                                 <a
                                     href="{{ route('sessions.show', $conferenceSession) }}"
                                     wire:navigate
                                     @class([
                                         'absolute inset-x-1 rounded-md border p-2 text-left text-xs shadow-sm focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700',
-                                        'border-sky-500 bg-sky-100 text-sky-950' => $isAssigned,
-                                        'border-slate-300 bg-white text-slate-900' => ! $isAssigned,
+                                        'border-violet-500 bg-violet-100 text-violet-950' => $isPlenum,
+                                        'border-sky-500 bg-sky-100 text-sky-950' => ! $isPlenum && $isAssigned,
+                                        'border-slate-300 bg-white text-slate-900' => ! $isPlenum && ! $isAssigned,
                                     ])
                                     style="top: {{ $positionedSession['top'] }}px; height: {{ $positionedSession['height'] }}px;"
                                 >
@@ -81,6 +83,9 @@
                                     </span>
                                     <span class="mt-1 block break-words font-semibold">{{ $conferenceSession->title }}</span>
                                     <span class="mt-1 block break-words text-slate-700">{{ $conferenceSession->speakers->pluck('name')->join(', ') }}</span>
+                                    @if ($isPlenum)
+                                        <span class="mt-1 block font-bold uppercase tracking-wide">Plenary</span>
+                                    @endif
                                 </a>
                             @endforeach
                         </div>

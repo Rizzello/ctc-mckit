@@ -69,7 +69,7 @@ class InterfaceTest extends TestCase
         Livewire::test(Agenda::class)->assertSee('My session')->assertSee('Another MC session')->assertSee('Your assigned sessions');
     }
 
-    public function test_agenda_expands_short_sessions_without_overlapping_the_next_session(): void
+    public function test_agenda_expands_back_to_back_short_sessions_without_overlapping(): void
     {
         $user = User::factory()->create();
         $room = Room::factory()->create();
@@ -91,8 +91,55 @@ class InterfaceTest extends TestCase
         Livewire::test(Agenda::class)
             ->assertSee('First short session')
             ->assertSee('Second short session')
-            ->assertSee('top: 116px;', false)
-            ->assertSee('height: 112px;', false);
+            ->assertSee('top: 96px;', false)
+            ->assertSee('height: 96px;', false);
+    }
+
+    public function test_agenda_keeps_sessions_aligned_to_their_start_time_when_a_slot_is_available(): void
+    {
+        $user = User::factory()->create();
+        $room = Room::factory()->create();
+        ConferenceSession::factory()->serviceSession()->create([
+            'room_id' => $room->id,
+            'title' => 'Opening keynote',
+            'starts_at' => CarbonImmutable::parse('2027-10-14 09:15:00 UTC'),
+            'ends_at' => CarbonImmutable::parse('2027-10-14 09:40:00 UTC'),
+        ]);
+        ConferenceSession::factory()->create([
+            'room_id' => $room->id,
+            'title' => 'First talk',
+            'starts_at' => CarbonImmutable::parse('2027-10-14 09:45:00 UTC'),
+            'ends_at' => CarbonImmutable::parse('2027-10-14 10:25:00 UTC'),
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(Agenda::class)
+            ->assertSee('Opening keynote')
+            ->assertSee('First talk')
+            ->assertSee('top: 135px;', false)
+            ->assertSee('height: 120px;', false);
+    }
+
+    public function test_agenda_displays_a_plenary_session_in_every_room_column(): void
+    {
+        $user = User::factory()->create();
+        $firstRoom = Room::factory()->create(['name' => 'Main room']);
+        Room::factory()->create(['name' => 'Side room']);
+        ConferenceSession::factory()->create([
+            'room_id' => $firstRoom->id,
+            'title' => 'All-room keynote',
+            'is_plenum_session' => true,
+            'starts_at' => CarbonImmutable::parse('2027-10-14 09:00:00 UTC'),
+            'ends_at' => CarbonImmutable::parse('2027-10-14 10:00:00 UTC'),
+        ]);
+
+        $this->actingAs($user);
+
+        $component = Livewire::test(Agenda::class);
+
+        $this->assertSame(2, substr_count($component->html(true), 'All-room keynote'));
+        $this->assertSame(2, substr_count($component->html(true), 'Plenary'));
     }
 
     public function test_admin_users_see_users_and_sync_navigation_and_admin_routes(): void
@@ -124,6 +171,7 @@ class InterfaceTest extends TestCase
             'ends_at' => CarbonImmutable::parse('2027-10-14 10:00:00 UTC'),
             'mc_description' => 'Welcome the audience and introduce the speaker.',
         ]);
+        $currentSession->mcs()->attach($user);
         ConferenceSession::factory()->removed()->create(['title' => 'Removed session']);
 
         $this->actingAs($user);
@@ -142,18 +190,24 @@ class InterfaceTest extends TestCase
     public function test_live_reader_loads_active_sessions_and_excludes_removed_sessions(): void
     {
         $user = User::factory()->create();
-        ConferenceSession::factory()->create(['title' => 'Active session']);
+        $assignedSession = ConferenceSession::factory()->create(['title' => 'Active session']);
+        $assignedSession->mcs()->attach($user);
+        ConferenceSession::factory()->create(['title' => 'Another MC session']);
         ConferenceSession::factory()->removed()->create(['title' => 'Removed session']);
 
         $this->actingAs($user);
 
-        Livewire::test(LiveSchedule::class)->assertSee('Active session')->assertDontSee('Removed session');
+        Livewire::test(LiveSchedule::class)
+            ->assertSee('Active session')
+            ->assertDontSee('Another MC session')
+            ->assertDontSee('Removed session');
     }
 
     public function test_live_reader_excludes_sessions_without_complete_scheduling_times(): void
     {
         $user = User::factory()->create();
-        ConferenceSession::factory()->create(['title' => 'Scheduled session']);
+        $scheduledSession = ConferenceSession::factory()->create(['title' => 'Scheduled session']);
+        $scheduledSession->mcs()->attach($user);
         ConferenceSession::factory()->create([
             'title' => 'Incomplete session',
             'starts_at' => null,
