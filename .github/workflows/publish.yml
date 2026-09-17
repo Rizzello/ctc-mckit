@@ -41,6 +41,8 @@ jobs:
           push: true
           tags: ${{ steps.app.outputs.tags }}
           labels: ${{ steps.app.outputs.labels }}
+          cache-from: type=gha,scope=app
+          cache-to: type=gha,mode=max,scope=app
       - uses: docker/metadata-action@v6
         id: web
         with:
@@ -56,3 +58,5 @@ jobs:
           push: true
           tags: ${{ steps.web.outputs.tags }}
           labels: ${{ steps.web.outputs.labels }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
