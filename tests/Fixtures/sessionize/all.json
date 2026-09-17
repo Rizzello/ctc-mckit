@@ -1,0 +1,40 @@
+{
+  "rooms": [
+    {"id": 10, "name": "Main Room"},
+    {"id": 20, "name": "Workshop Room"}
+  ],
+  "speakers": [
+    {
+      "id": "speaker-a",
+      "fullName": "Amina Khan",
+      "tagLine": "Platform engineer",
+      "bio": "Amina builds dependable systems.",
+      "profilePicture": "https://images.example.test/amina.jpg",
+      "links": [{"title": "Website", "url": "https://example.test/amina"}]
+    },
+    {
+      "id": "speaker-b",
+      "fullName": "Theo Martin",
+      "tagLine": null,
+      "bio": null,
+      "profilePicture": null,
+      "links": []
+    }
+  ],
+  "sessions": [
+    {
+      "id": "talk-1",
+      "title": "Reliable systems",
+      "description": "A practical discussion about resilient software.",
+      "startsAt": "2027-06-01T09:00:00",
+      "endsAt": "2027-06-01T09:40:00",
+      "roomId": 10,
+      "status": "Accepted",
+      "isConfirmed": true,
+      "isServiceSession": false,
+      "isPlenumSession": false,
+      "categoryItems": [{"id": 1, "name": "Engineering"}],
+      "speakers": ["speaker-a", "speaker-b"]
+    }
+  ]
+}

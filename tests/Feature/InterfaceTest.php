@@ -23,14 +23,15 @@ class InterfaceTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    public function test_enabled_users_can_reach_live_and_normal_users_do_not_see_admin_navigation(): void
+    public function test_enabled_users_can_reach_live_and_normal_users_do_not_see_administration_navigation(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user)->get(route('live'))
             ->assertOk()
             ->assertSee('Live')
-            ->assertDontSee('>Admin<', false);
+            ->assertDontSee('>Users<', false)
+            ->assertDontSee('>Sync<', false);
     }
 
     public function test_live_uses_the_configured_application_timezone_for_client_rendering(): void
@@ -94,11 +95,14 @@ class InterfaceTest extends TestCase
             ->assertSee('height: 112px;', false);
     }
 
-    public function test_admin_users_see_admin_navigation_and_admin_routes(): void
+    public function test_admin_users_see_users_and_sync_navigation_and_admin_routes(): void
     {
         $admin = User::factory()->admin()->create();
 
-        $this->actingAs($admin)->get(route('live'))->assertOk()->assertSee('>Admin<', false);
+        $this->actingAs($admin)->get(route('live'))
+            ->assertOk()
+            ->assertSee('>Users<', false)
+            ->assertSee('>Sync<', false);
         $this->actingAs($admin)->get(route('admin.users.index'))->assertOk()->assertSee('Users');
         $this->actingAs($admin)->get(route('admin.sessionize'))->assertOk()->assertSee('Sessionize');
     }
