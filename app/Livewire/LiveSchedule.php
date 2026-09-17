@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\ConferenceSession;
 use App\Models\SessionNote;
 use App\Models\Speaker;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -14,13 +15,15 @@ class LiveSchedule extends Component
 {
     public function render(): View
     {
+        $currentUser = $this->currentUser();
+
         /** @var Collection<int, ConferenceSession> $conferenceSessions */
         $conferenceSessions = ConferenceSession::query()
             ->active()
+            ->assignedTo($currentUser)
             ->whereNotNull('starts_at')
             ->whereNotNull('ends_at')
             ->with(['room', 'speakers', 'mcs', 'notes'])
-            ->ordered()
             ->get();
 
         return view('livewire.live-schedule', [
@@ -46,5 +49,14 @@ class LiveSchedule extends Component
             ])->all(),
             'timezone' => (string) config('app.timezone'),
         ]);
+    }
+
+    private function currentUser(): User
+    {
+        $user = auth()->user();
+
+        abort_unless($user instanceof User, 403);
+
+        return $user;
     }
 }

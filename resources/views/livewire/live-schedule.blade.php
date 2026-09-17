@@ -9,8 +9,8 @@
 
     <template x-if="sessions.length === 0">
         <div class="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center">
-            <h2 class="font-semibold">No schedule imported yet</h2>
-            <p class="mt-1 text-sm text-slate-600">Live mode will be ready when sessions are available.</p>
+            <h2 class="font-semibold">No sessions assigned to you</h2>
+            <p class="mt-1 text-sm text-slate-600">Live mode will be ready when an administrator assigns a session to you.</p>
         </div>
     </template>
 
