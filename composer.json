@@ -48,6 +48,7 @@
             "@quality",
             "composer audit"
         ],
+        "demo:data": "@php artisan db:seed --class=DemoScheduleSeeder --no-interaction",
         "setup": [
             "composer install",
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
