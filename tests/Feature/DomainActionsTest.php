@@ -100,9 +100,9 @@ class DomainActionsTest extends TestCase
         (new UpdateConferenceSessionMcContent)->handle(User::factory()->disabled()->create(), $conferenceSession, 'Welcome.', null);
     }
 
-    public function test_enabled_user_can_create_a_note_without_spoofing_its_author(): void
+    public function test_only_an_enabled_admin_can_create_a_note_without_spoofing_its_author(): void
     {
-        $actor = User::factory()->create();
+        $actor = User::factory()->admin()->create();
         $conferenceSession = ConferenceSession::factory()->create();
 
         $note = (new AddSessionNote)->handle($actor, $conferenceSession, 'Check the presenter microphone.');
@@ -111,46 +111,44 @@ class DomainActionsTest extends TestCase
         $this->assertSame($conferenceSession->id, $note->conference_session_id);
     }
 
-    public function test_note_author_can_update_and_delete_their_note(): void
+    public function test_non_admin_users_cannot_create_notes(): void
+    {
+        $actor = User::factory()->create();
+        $conferenceSession = ConferenceSession::factory()->create();
+
+        $this->expectException(AuthorizationException::class);
+
+        (new AddSessionNote)->handle($actor, $conferenceSession, 'Check the presenter microphone.');
+    }
+
+    public function test_non_admin_note_authors_cannot_update_their_note(): void
     {
         $author = User::factory()->create();
         $note = SessionNote::factory()->create(['user_id' => $author]);
 
+        $this->expectException(AuthorizationException::class);
+
         (new UpdateSessionNote)->handle($author, $note, 'Use the handheld microphone.');
-
-        $this->assertSame('Use the handheld microphone.', $note->fresh()->body);
-
-        (new DeleteSessionNote)->handle($author, $note);
-
-        $this->assertDatabaseMissing('session_notes', ['id' => $note->id]);
     }
 
-    public function test_other_users_cannot_update_or_delete_a_note(): void
+    public function test_non_admin_note_authors_cannot_delete_their_note(): void
     {
-        $note = SessionNote::factory()->create();
-        $otherUser = User::factory()->create();
-
-        try {
-            (new UpdateSessionNote)->handle($otherUser, $note, 'Changed by another user.');
-            $this->fail('A non-author must not update a note.');
-        } catch (AuthorizationException) {
-        }
+        $author = User::factory()->create();
+        $note = SessionNote::factory()->create(['user_id' => $author]);
 
         $this->expectException(AuthorizationException::class);
 
-        (new DeleteSessionNote)->handle($otherUser, $note);
+        (new DeleteSessionNote)->handle($author, $note);
     }
 
-    public function test_admin_can_delete_but_cannot_rewrite_another_users_note(): void
+    public function test_admin_can_update_and_delete_any_note(): void
     {
         $admin = User::factory()->admin()->create();
         $note = SessionNote::factory()->create(['body' => 'Original note.']);
 
-        try {
-            (new UpdateSessionNote)->handle($admin, $note, 'Rewritten note.');
-            $this->fail('An administrator must not rewrite another user\'s note.');
-        } catch (AuthorizationException) {
-        }
+        (new UpdateSessionNote)->handle($admin, $note, 'Updated by an administrator.');
+
+        $this->assertSame('Updated by an administrator.', $note->fresh()->body);
 
         (new DeleteSessionNote)->handle($admin, $note);
 
@@ -159,7 +157,7 @@ class DomainActionsTest extends TestCase
 
     public function test_note_content_is_validated(): void
     {
-        $actor = User::factory()->create();
+        $actor = User::factory()->admin()->create();
         $conferenceSession = ConferenceSession::factory()->create();
 
         $this->expectException(ValidationException::class);

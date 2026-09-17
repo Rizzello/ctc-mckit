@@ -28,7 +28,7 @@ class SessionNotePolicy
      */
     public function create(User $user): bool
     {
-        return $user->enabled;
+        return $user->enabled && $user->is_admin;
     }
 
     /**
@@ -36,7 +36,7 @@ class SessionNotePolicy
      */
     public function update(User $user, SessionNote $sessionNote): bool
     {
-        return $user->enabled && $sessionNote->user_id === $user->id;
+        return $user->enabled && $user->is_admin;
     }
 
     /**
@@ -44,6 +44,6 @@ class SessionNotePolicy
      */
     public function delete(User $user, SessionNote $sessionNote): bool
     {
-        return $user->enabled && ($sessionNote->user_id === $user->id || $user->is_admin);
+        return $user->enabled && $user->is_admin;
     }
 }

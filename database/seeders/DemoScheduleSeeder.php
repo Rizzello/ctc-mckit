@@ -39,14 +39,14 @@ class DemoScheduleSeeder extends Seeder
         $speakers = [];
 
         foreach ([
-            ['id' => 'demo-speaker-giulia-ferri', 'name' => 'Giulia Ferri', 'tagline' => 'CTO e facilitatrice di team prodotto', 'bio' => 'Giulia guida team che trasformano sistemi complessi in prodotti leggibili e durevoli.', 'photo' => 'https://pravatar.cc/300?img=12'],
-            ['id' => 'demo-speaker-luca-serra', 'name' => 'Luca Serra', 'tagline' => 'Principal engineer', 'bio' => 'Luca lavora su piattaforme PHP ad alta affidabilità e su pratiche di revisione del codice.', 'photo' => 'https://pravatar.cc/300?img=13'],
-            ['id' => 'demo-speaker-amina-khan', 'name' => 'Amina Khan', 'tagline' => 'Staff product designer', 'bio' => 'Amina progetta strumenti operativi accessibili per squadre distribuite.', 'photo' => 'https://pravatar.cc/300?img=47'],
-            ['id' => 'demo-speaker-davide-gori', 'name' => 'Davide Gori', 'tagline' => 'Platform architect', 'bio' => 'Davide aiuta organizzazioni in crescita a rendere osservabili i loro sistemi.', 'photo' => 'https://pravatar.cc/300?img=14'],
-            ['id' => 'demo-speaker-marta-bianchi', 'name' => 'Marta Bianchi', 'tagline' => 'Engineering manager', 'bio' => 'Marta costruisce rituali di team che migliorano qualità e autonomia.', 'photo' => 'https://pravatar.cc/300?img=45'],
-            ['id' => 'demo-speaker-riccardo-villa', 'name' => 'Riccardo Villa', 'tagline' => 'Security engineer', 'bio' => 'Riccardo rende la sicurezza una pratica concreta nella vita quotidiana dei team.', 'photo' => 'https://pravatar.cc/300?img=15'],
-            ['id' => 'demo-speaker-elena-mori', 'name' => 'Elena Mori', 'tagline' => 'Developer advocate', 'bio' => 'Elena racconta sistemi complessi con esempi concreti e linguaggio diretto.', 'photo' => 'https://pravatar.cc/300?img=32'],
-            ['id' => 'demo-speaker-paolo-russo', 'name' => 'Paolo Russo', 'tagline' => 'Data engineer', 'bio' => 'Paolo progetta flussi dati che restano comprensibili anche sotto pressione.', 'photo' => 'https://pravatar.cc/300?img=16'],
+            ['id' => 'demo-speaker-giulia-ferri', 'name' => 'Giulia Ferri', 'tagline' => 'CTO e facilitatrice di team prodotto', 'bio' => 'Giulia guida team che trasformano sistemi complessi in prodotti leggibili e durevoli.', 'photo' => 'https://i.pravatar.cc/300?img=12'],
+            ['id' => 'demo-speaker-luca-serra', 'name' => 'Luca Serra', 'tagline' => 'Principal engineer', 'bio' => 'Luca lavora su piattaforme PHP ad alta affidabilità e su pratiche di revisione del codice.', 'photo' => 'https://i.pravatar.cc/300?img=13'],
+            ['id' => 'demo-speaker-amina-khan', 'name' => 'Amina Khan', 'tagline' => 'Staff product designer', 'bio' => 'Amina progetta strumenti operativi accessibili per squadre distribuite.', 'photo' => 'https://i.pravatar.cc/300?img=47'],
+            ['id' => 'demo-speaker-davide-gori', 'name' => 'Davide Gori', 'tagline' => 'Platform architect', 'bio' => 'Davide aiuta organizzazioni in crescita a rendere osservabili i loro sistemi.', 'photo' => 'https://i.pravatar.cc/300?img=14'],
+            ['id' => 'demo-speaker-marta-bianchi', 'name' => 'Marta Bianchi', 'tagline' => 'Engineering manager', 'bio' => 'Marta costruisce rituali di team che migliorano qualità e autonomia.', 'photo' => 'https://i.pravatar.cc/300?img=45'],
+            ['id' => 'demo-speaker-riccardo-villa', 'name' => 'Riccardo Villa', 'tagline' => 'Security engineer', 'bio' => 'Riccardo rende la sicurezza una pratica concreta nella vita quotidiana dei team.', 'photo' => 'https://i.pravatar.cc/300?img=15'],
+            ['id' => 'demo-speaker-elena-mori', 'name' => 'Elena Mori', 'tagline' => 'Developer advocate', 'bio' => 'Elena racconta sistemi complessi con esempi concreti e linguaggio diretto.', 'photo' => 'https://i.pravatar.cc/300?img=32'],
+            ['id' => 'demo-speaker-paolo-russo', 'name' => 'Paolo Russo', 'tagline' => 'Data engineer', 'bio' => 'Paolo progetta flussi dati che restano comprensibili anche sotto pressione.', 'photo' => 'https://i.pravatar.cc/300?img=16'],
         ] as $speaker) {
             $speakers[$speaker['id']] = Speaker::query()->updateOrCreate(
                 ['sessionize_id' => $speaker['id']],

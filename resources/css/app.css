@@ -1,5 +1,13 @@
 @import 'tailwindcss';
 
+[x-cloak] {
+    display: none !important;
+}
+
+dialog::backdrop {
+    background: rgb(15 23 42 / 0.45);
+}
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
