@@ -59,14 +59,15 @@ class Agenda extends Component
             : $rooms->mapWithKeys(fn (Room $room): array => [
                 $room->id => $this->positionSessions($conferenceSessions->where('room_id', $room->id), $calendarStart),
             ]);
-        $calendarHeight = max(
+        $calendarHeights = [
             $calendarStart === null || $calendarEnd === null
                 ? 0
                 : $calendarStart->diffInMinutes($calendarEnd) * self::PIXELS_PER_MINUTE,
             ...$positionedSessions
                 ->map(fn (Collection $sessions): int => $sessions->last()['bottom'] ?? 0)
                 ->all(),
-        );
+        ];
+        $calendarHeight = max($calendarHeights);
 
         return view('livewire.agenda', [
             'conferenceSessions' => $conferenceSessions,

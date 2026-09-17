@@ -1,4 +1,4 @@
-<section x-data="liveReader(@js($liveSessions))" x-init="start()" class="space-y-5">
+<section x-data="liveReader(@js($liveSessions), @js($timezone))" x-init="start()" class="space-y-5">
     <div class="flex items-center justify-between gap-3">
         <div>
             <p class="text-sm font-semibold text-sky-800">Read-only presenter mode</p>

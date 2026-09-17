@@ -35,6 +35,7 @@ class EditUser extends Component
     {
         try {
             $action->handle($this->currentUser(), $this->user, $this->name, $this->email, $this->isAdmin, $this->enabled);
+            session()->flash('success', 'User updated.');
             $this->redirectRoute('admin.users.index', navigate: true);
         } catch (ValidationException $exception) {
             foreach ($exception->errors() as $field => $messages) {
@@ -48,6 +49,7 @@ class EditUser extends Component
         try {
             $action->handle($this->currentUser(), $this->user);
             $this->enabled = false;
+            $this->dispatch('toast', type: 'success', message: 'User disabled.');
         } catch (ValidationException $exception) {
             foreach ($exception->errors() as $field => $messages) {
                 $this->addError($field, $messages[0]);

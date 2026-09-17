@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\SessionizePresenceStatus;
 use App\Models\ConferenceSession;
 use App\Models\User;
 
@@ -20,7 +21,8 @@ class ConferenceSessionPolicy
      */
     public function view(User $user, ConferenceSession $conferenceSession): bool
     {
-        return $user->enabled;
+        return $user->enabled
+            && ($conferenceSession->getRawOriginal('sessionize_status') !== SessionizePresenceStatus::Removed->value || $user->is_admin);
     }
 
     /**

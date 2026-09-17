@@ -1,10 +1,6 @@
 <section class="space-y-6">
     <a href="{{ route('sessions.index') }}" wire:navigate class="inline-flex min-h-11 items-center text-sm font-semibold text-sky-800">← Sessions</a>
 
-    @if ($successMessage)
-        <p role="status" class="rounded-md border border-emerald-300 bg-emerald-50 p-3 font-medium text-emerald-900">{{ $successMessage }}</p>
-    @endif
-
     @if ($conferenceSession->sessionize_status === \App\Enums\SessionizePresenceStatus::Removed)
         <p class="rounded-md border border-amber-300 bg-amber-50 p-3 font-medium text-amber-900">This session was removed from the source schedule.</p>
     @endif
@@ -64,27 +60,64 @@
         </form>
     </section>
 
-    <section class="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
-        <h2 class="text-xl font-bold">Assigned MCs</h2>
-        <p class="text-sm">{{ $conferenceSession->mcs->pluck('name')->join(', ') ?: 'No MC assigned' }}</p>
+    <section x-data x-on:mc-assigned.window="$refs.mcDialog.close()" class="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
+        <div class="flex items-start justify-between gap-3">
+            <div>
+                <h2 class="text-xl font-bold">Assigned MCs</h2>
+                <p class="mt-1 text-sm text-slate-600">People responsible for this session.</p>
+            </div>
+            @can('assignMc', [$conferenceSession, auth()->user()])
+                <button x-on:click="$refs.mcDialog.showModal()" type="button" class="min-h-11 shrink-0 rounded-md bg-slate-900 px-4 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Assign MC</button>
+            @endcan
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2">
+            @forelse ($conferenceSession->mcs as $mc)
+                <article class="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <p class="font-semibold">{{ $mc->name }}</p>
+                    @can('unassignMc', [$conferenceSession, $mc])
+                        <button wire:click="unassignMc({{ $mc->id }})" type="button" class="min-h-11 shrink-0 rounded-md px-3 text-sm font-semibold text-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700">Remove</button>
+                    @endcan
+                </article>
+            @empty
+                <p class="text-sm text-slate-600">No MC assigned.</p>
+            @endforelse
+        </div>
+
         @can('assignMc', [$conferenceSession, auth()->user()])
-            <form wire:submit="assignMc" class="flex gap-2">
-                <label class="sr-only" for="assign-user">Assign MC</label>
-                <select id="assign-user" wire:model="assignUserId" class="min-h-11 grow rounded-md border border-slate-300 bg-white px-3">
-                    <option value="">Choose enabled user</option>
-                    @foreach ($assignableUsers as $user)
-                        <option value="{{ $user->id }}">{{ $user->name }}</option>
-                    @endforeach
-                </select>
-                <button type="submit" class="min-h-11 rounded-md bg-slate-900 px-4 font-semibold text-white">Assign</button>
-            </form>
-            @foreach ($conferenceSession->mcs as $mc)
-                <button wire:click="unassignMc({{ $mc->id }})" type="button" class="min-h-11 text-sm font-semibold text-red-800">Remove {{ $mc->name }}</button>
-            @endforeach
+            <dialog x-ref="mcDialog" x-on:click.self="$refs.mcDialog.close()" x-on:cancel="$event.preventDefault(); $refs.mcDialog.close()" class="fixed inset-0 m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-xl border border-slate-300 bg-white p-0 shadow-2xl">
+                <div class="space-y-5 p-5">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-sm font-semibold text-sky-800">Session staffing</p>
+                            <h3 class="text-xl font-bold">Assign MC</h3>
+                        </div>
+                        <button x-on:click="$refs.mcDialog.close()" type="button" aria-label="Close MC management" title="Close" class="grid size-11 place-items-center rounded-md text-2xl text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">×</button>
+                    </div>
+
+                    <form wire:submit="assignMc" class="flex gap-2">
+                        <label class="sr-only" for="assign-user">Assign MC</label>
+                        <select id="assign-user" wire:model="assignUserId" class="min-h-11 grow rounded-md border border-slate-300 bg-white px-3">
+                            <option value="">Choose enabled user</option>
+                            @foreach ($assignableUsers as $user)
+                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                            @endforeach
+                        </select>
+                        <button type="submit" class="min-h-11 rounded-md bg-slate-900 px-4 font-semibold text-white">Assign</button>
+                    </form>
+                    @error('assignUserId')
+                        <p class="text-sm text-red-700">{{ $message }}</p>
+                    @enderror
+                    @error('user')
+                        <p class="text-sm text-red-700">{{ $message }}</p>
+                    @enderror
+
+                </div>
+            </dialog>
         @endcan
     </section>
 
-    <section x-data x-on:note-added.window="$refs.noteDialog.close()" class="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
+    <section x-data x-on:note-added.window="$refs.noteDialog.close()" x-on:note-updated.window="$refs.editNoteDialog.close()" class="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
         <div class="flex items-start justify-between gap-4">
             <div>
                 <p class="text-sm font-semibold text-sky-800">Shared technical notes</p>
@@ -128,7 +161,17 @@
         <div class="space-y-3">
             @forelse ($conferenceSession->notes->sortBy('created_at') as $note)
                 <article class="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                    <p class="text-sm text-slate-600">{{ $note->created_at->format('D M · H:i') }}</p>
+                    <div class="flex items-start justify-between gap-3">
+                        <p class="text-sm text-slate-600">{{ $note->created_at->format('D M · H:i') }}</p>
+                        @can('update', $note)
+                            <div class="flex shrink-0 gap-2">
+                                <button wire:click="editNote({{ $note->id }})" type="button" class="min-h-11 rounded-md px-3 text-sm font-semibold text-sky-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Edit</button>
+                                @can('delete', $note)
+                                    <button wire:click="deleteNote({{ $note->id }})" wire:confirm="Delete this note?" type="button" class="min-h-11 rounded-md px-3 text-sm font-semibold text-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700">Delete</button>
+                                @endcan
+                            </div>
+                        @endcan
+                    </div>
                     <p class="mt-3 whitespace-pre-line leading-relaxed text-slate-800">{{ $note->body }}</p>
                 </article>
             @empty
@@ -138,6 +181,35 @@
                 </div>
             @endforelse
         </div>
+
+        @can('update', $conferenceSession->notes->first() ?? new \App\Models\SessionNote)
+            @if ($editingNoteId !== null)
+                <dialog x-ref="editNoteDialog" x-init="$nextTick(() => { if (!$el.open) $el.showModal(); })" x-on:click.self="$refs.editNoteDialog.close()" x-on:cancel="$event.preventDefault(); $refs.editNoteDialog.close()" class="fixed inset-0 m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-xl border border-slate-300 bg-white p-0 shadow-2xl">
+                    <form wire:submit="updateNote" class="space-y-5 p-5">
+                        <div class="sticky top-0 flex items-center justify-between gap-3 bg-white pb-3">
+                            <div>
+                                <p class="text-sm font-semibold text-sky-800">Technical session note</p>
+                                <h3 class="text-xl font-bold">Edit note</h3>
+                            </div>
+                            <button x-on:click="$refs.editNoteDialog.close()" type="button" aria-label="Close note form" title="Close" class="grid size-11 place-items-center rounded-md text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
+                                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-6"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+                            </button>
+                        </div>
+                        <label class="grid gap-2 text-sm font-semibold" for="edit-note-body">
+                            Note
+                            <textarea id="edit-note-body" wire:model="editingNoteBody" rows="7" aria-describedby="edit-note-body-error" class="min-h-36 rounded-md border border-slate-300 p-3 text-base leading-relaxed focus-visible:outline-2 focus-visible:outline-sky-700"></textarea>
+                        </label>
+                        @error('editingNoteBody')
+                            <p id="edit-note-body-error" class="text-sm text-red-700">{{ $message }}</p>
+                        @enderror
+                        <div class="flex justify-end gap-3">
+                            <button x-on:click="$refs.editNoteDialog.close()" type="button" class="min-h-11 rounded-md px-4 font-semibold text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Cancel</button>
+                            <button type="submit" class="min-h-11 rounded-md bg-sky-800 px-4 font-semibold text-white data-loading:cursor-wait data-loading:opacity-60">Save note</button>
+                        </div>
+                    </form>
+                </dialog>
+            @endif
+        @endcan
 
     </section>
 </section>

@@ -44,6 +44,7 @@ class LiveSchedule extends Component
                     'createdAt' => CarbonImmutable::parse($note->created_at)->toIso8601String(),
                 ])->all(),
             ])->all(),
+            'timezone' => (string) config('app.timezone'),
         ]);
     }
 }

@@ -27,6 +27,7 @@ class CreateUser extends Component
     {
         try {
             $action->handle($this->currentUser(), $this->name, $this->email, $this->isAdmin, $this->enabled);
+            session()->flash('success', 'User created.');
             $this->redirectRoute('admin.users.index', navigate: true);
         } catch (ValidationException $exception) {
             foreach ($exception->errors() as $field => $messages) {

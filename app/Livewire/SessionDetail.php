@@ -4,11 +4,15 @@ namespace App\Livewire;
 
 use App\Actions\AddSessionNote;
 use App\Actions\AssignMcToConferenceSession;
+use App\Actions\DeleteSessionNote;
 use App\Actions\UnassignMcFromConferenceSession;
 use App\Actions\UpdateConferenceSessionMcContent;
+use App\Actions\UpdateSessionNote;
 use App\Models\ConferenceSession;
+use App\Models\SessionNote;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
@@ -22,9 +26,11 @@ class SessionDetail extends Component
 
     public string $noteBody = '';
 
-    public ?int $assignUserId = null;
+    public ?int $editingNoteId = null;
 
-    public ?string $successMessage = null;
+    public string $editingNoteBody = '';
+
+    public ?int $assignUserId = null;
 
     public function mount(ConferenceSession $conferenceSession): void
     {
@@ -38,7 +44,7 @@ class SessionDetail extends Component
     {
         try {
             $action->handle($this->currentUser(), $this->conferenceSession, $this->mcDescription, $this->mcScript);
-            $this->successMessage = 'MC content saved.';
+            $this->dispatch('toast', type: 'success', message: 'Session preparation saved.');
         } catch (ValidationException $exception) {
             $this->setValidationErrors($exception);
         }
@@ -49,8 +55,8 @@ class SessionDetail extends Component
         try {
             $action->handle($this->currentUser(), $this->conferenceSession, $this->noteBody);
             $this->noteBody = '';
-            $this->successMessage = 'Note added.';
             $this->dispatch('note-added');
+            $this->dispatch('toast', type: 'success', message: 'Note added.');
         } catch (ValidationException $exception) {
             $this->setValidationErrors($exception);
         }
@@ -68,7 +74,8 @@ class SessionDetail extends Component
             $mc = User::query()->where('enabled', true)->findOrFail($this->assignUserId);
             $action->handle($this->currentUser(), $this->conferenceSession, $mc);
             $this->assignUserId = null;
-            $this->successMessage = 'MC assigned.';
+            $this->dispatch('mc-assigned');
+            $this->dispatch('toast', type: 'success', message: 'MC assigned.');
         } catch (ValidationException $exception) {
             $this->setValidationErrors($exception);
         }
@@ -78,19 +85,68 @@ class SessionDetail extends Component
     {
         $mc = User::query()->findOrFail($userId);
         $action->handle($this->currentUser(), $this->conferenceSession, $mc);
-        $this->successMessage = 'MC removed.';
+        $this->dispatch('mc-unassigned');
+        $this->dispatch('toast', type: 'success', message: 'MC assignment removed.');
+    }
+
+    public function editNote(int $noteId): void
+    {
+        $note = $this->findNote($noteId);
+        Gate::forUser($this->currentUser())->authorize('update', $note);
+
+        $this->editingNoteId = $note->id;
+        $this->editingNoteBody = $note->body;
+        $this->resetValidation('editingNoteBody');
+    }
+
+    public function updateNote(UpdateSessionNote $action): void
+    {
+        if ($this->editingNoteId === null) {
+            return;
+        }
+
+        try {
+            $action->handle($this->currentUser(), $this->findNote($this->editingNoteId), $this->editingNoteBody);
+            $this->editingNoteId = null;
+            $this->editingNoteBody = '';
+            $this->resetValidation('editingNoteBody');
+            $this->dispatch('note-updated');
+            $this->dispatch('toast', type: 'success', message: 'Note updated.');
+        } catch (ValidationException $exception) {
+            $this->setValidationErrors($exception, 'editingNoteBody');
+        }
+    }
+
+    public function deleteNote(int $noteId, DeleteSessionNote $action): void
+    {
+        $action->handle($this->currentUser(), $this->findNote($noteId));
+        $this->dispatch('toast', type: 'success', message: 'Note deleted.');
     }
 
     public function render(): View
     {
+        $currentUser = $this->currentUser();
         $conferenceSession = $this->conferenceSession->fresh(['room', 'speakers', 'mcs', 'notes']);
 
         abort_unless($conferenceSession instanceof ConferenceSession, 404);
 
         return view('livewire.session-detail', [
             'conferenceSession' => $conferenceSession,
-            'assignableUsers' => User::query()->where('enabled', true)->orderBy('name')->get(),
+            'assignableUsers' => $currentUser->is_admin
+                ? User::query()
+                    ->where('enabled', true)
+                    ->whereNotIn('id', $conferenceSession->mcs->modelKeys())
+                    ->orderBy('name')
+                    ->get()
+                : collect(),
         ]);
+    }
+
+    private function findNote(int $noteId): SessionNote
+    {
+        return SessionNote::query()
+            ->where('conference_session_id', $this->conferenceSession->getKey())
+            ->findOrFail($noteId);
     }
 
     private function currentUser(): User
@@ -102,10 +158,10 @@ class SessionDetail extends Component
         return $user;
     }
 
-    private function setValidationErrors(ValidationException $exception): void
+    private function setValidationErrors(ValidationException $exception, string $field = 'body'): void
     {
-        foreach ($exception->errors() as $field => $messages) {
-            $this->addError($field, $messages[0]);
+        foreach ($exception->errors() as $errorField => $messages) {
+            $this->addError($field === 'body' ? $errorField : $field, $messages[0]);
         }
     }
 }

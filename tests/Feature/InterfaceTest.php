@@ -3,12 +3,15 @@
 namespace Tests\Feature;
 
 use App\Actions\AddSessionNote;
+use App\Livewire\Admin\Users\CreateUser;
+use App\Livewire\Admin\Users\EditUser;
 use App\Livewire\Agenda;
 use App\Livewire\LiveSchedule;
 use App\Livewire\SessionDetail;
 use App\Livewire\SessionsBrowser;
 use App\Models\ConferenceSession;
 use App\Models\Room;
+use App\Models\SessionNote;
 use App\Models\Speaker;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -28,6 +31,22 @@ class InterfaceTest extends TestCase
             ->assertOk()
             ->assertSee('Live')
             ->assertDontSee('>Admin<', false);
+    }
+
+    public function test_live_uses_the_configured_application_timezone_for_client_rendering(): void
+    {
+        config(['app.timezone' => 'Europe/Rome']);
+        $user = User::factory()->create();
+        ConferenceSession::factory()->create([
+            'starts_at' => CarbonImmutable::parse('2027-10-14 09:00:00 UTC'),
+            'ends_at' => CarbonImmutable::parse('2027-10-14 10:00:00 UTC'),
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(LiveSchedule::class)
+            ->assertSee('Europe', false)
+            ->assertSee('Rome', false);
     }
 
     public function test_agenda_shows_the_complete_schedule_and_highlights_the_current_users_assignments(): void
@@ -159,6 +178,42 @@ class InterfaceTest extends TestCase
         Livewire::test(SessionsBrowser::class)->set('search', 'Amina')->assertSee($speakerMatch->title);
     }
 
+    public function test_normal_users_cannot_force_removed_sessions_in_the_sessions_browser(): void
+    {
+        $user = User::factory()->create();
+        ConferenceSession::factory()->removed()->create(['title' => 'Removed only for admins']);
+
+        $this->actingAs($user);
+
+        Livewire::test(SessionsBrowser::class)
+            ->set('showRemoved', true)
+            ->assertDontSee('Removed only for admins')
+            ->assertDontSee('Show removed sessions');
+    }
+
+    public function test_administrators_can_intentionally_inspect_removed_sessions(): void
+    {
+        $admin = User::factory()->admin()->create();
+        ConferenceSession::factory()->removed()->create(['title' => 'Removed for inspection']);
+
+        $this->actingAs($admin);
+
+        Livewire::test(SessionsBrowser::class)
+            ->set('showRemoved', true)
+            ->assertSee('Removed for inspection')
+            ->assertSee('Show removed sessions');
+    }
+
+    public function test_agenda_excludes_removed_sessions(): void
+    {
+        $user = User::factory()->create();
+        ConferenceSession::factory()->removed()->create(['title' => 'Removed from agenda']);
+
+        $this->actingAs($user);
+
+        Livewire::test(Agenda::class)->assertDontSee('Removed from agenda');
+    }
+
     public function test_sessions_browser_offers_available_dates_and_filters_sessions_by_the_selected_day(): void
     {
         $user = User::factory()->create();
@@ -217,10 +272,10 @@ class InterfaceTest extends TestCase
             ->set('mcDescription', 'Welcome the audience.')
             ->set('mcScript', 'Please welcome our speaker.')
             ->call('saveMcContent')
-            ->assertSee('MC content saved.')
+            ->assertDispatched('toast', type: 'success', message: 'Session preparation saved.')
             ->set('noteBody', 'Check the stage timer.')
             ->call('addNote')
-            ->assertSee('Note added.')
+            ->assertDispatched('toast', type: 'success', message: 'Note added.')
             ->assertDispatched('note-added');
 
         $this->assertSame('Welcome the audience.', $conferenceSession->fresh()->mc_description);
@@ -244,7 +299,77 @@ class InterfaceTest extends TestCase
         Livewire::test(SessionDetail::class, ['conferenceSession' => $conferenceSession])
             ->assertSee('Stage microphone is on channel two.')
             ->assertDontSee($admin->name)
-            ->assertDontSee('Add note');
+            ->assertDontSee('Add note')
+            ->assertDontSee('Edit')
+            ->assertDontSee('Delete');
+    }
+
+    public function test_administrator_can_edit_and_delete_notes_with_toast_feedback(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $conferenceSession = ConferenceSession::factory()->create();
+        $note = SessionNote::factory()->create([
+            'conference_session_id' => $conferenceSession->id,
+            'body' => 'Original technical note.',
+        ]);
+
+        $this->actingAs($admin);
+
+        Livewire::test(SessionDetail::class, ['conferenceSession' => $conferenceSession])
+            ->assertSee('Edit')
+            ->assertSee('Delete')
+            ->call('editNote', $note->id)
+            ->assertSet('editingNoteId', $note->id)
+            ->assertSet('editingNoteBody', 'Original technical note.')
+            ->set('editingNoteBody', 'Updated technical note.')
+            ->call('updateNote')
+            ->assertDispatched('toast', type: 'success', message: 'Note updated.')
+            ->assertSet('editingNoteId', null)
+            ->assertSee('Updated technical note.')
+            ->call('deleteNote', $note->id)
+            ->assertDispatched('toast', type: 'success', message: 'Note deleted.');
+
+        $this->assertDatabaseMissing('session_notes', ['id' => $note->id]);
+    }
+
+    public function test_removed_session_detail_is_restricted_to_administrators(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $user = User::factory()->create();
+        $removedSession = ConferenceSession::factory()->removed()->create(['title' => 'Removed detail']);
+
+        $this->actingAs($user)->get(route('sessions.show', $removedSession))->assertForbidden();
+        $this->actingAs($admin)->get(route('sessions.show', $removedSession))->assertOk()->assertSee('Removed detail');
+    }
+
+    public function test_admin_user_creation_flashes_a_success_toast(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin);
+
+        Livewire::test(CreateUser::class)
+            ->set('name', 'New operator')
+            ->set('email', 'operator@example.com')
+            ->call('save')
+            ->assertRedirect(route('admin.users.index'));
+
+        $this->assertSame('User created.', session('success'));
+    }
+
+    public function test_admin_user_update_flashes_a_success_toast(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $user = User::factory()->create(['name' => 'Old name']);
+
+        $this->actingAs($admin);
+
+        Livewire::test(EditUser::class, ['user' => $user])
+            ->set('name', 'Updated name')
+            ->call('save')
+            ->assertRedirect(route('admin.users.index'));
+
+        $this->assertSame('User updated.', session('success'));
     }
 
     public function test_only_administrators_receive_assignment_controls_and_disabled_users_are_not_selectable(): void
@@ -252,21 +377,29 @@ class InterfaceTest extends TestCase
         $user = User::factory()->create();
         $admin = User::factory()->admin()->create();
         $enabledMc = User::factory()->create(['name' => 'Enabled MC']);
+        $availableMc = User::factory()->create(['name' => 'Available MC']);
         $disabledMc = User::factory()->disabled()->create(['name' => 'Disabled MC']);
         $conferenceSession = ConferenceSession::factory()->create();
+        $conferenceSession->mcs()->attach($enabledMc);
 
         $this->actingAs($user);
-        Livewire::test(SessionDetail::class, ['conferenceSession' => $conferenceSession])->assertDontSee('Choose enabled user');
+        Livewire::test(SessionDetail::class, ['conferenceSession' => $conferenceSession])
+            ->assertSee($enabledMc->name)
+            ->assertDontSee('Assign MC')
+            ->assertDontSee('Remove');
 
         $this->actingAs($admin);
         Livewire::test(SessionDetail::class, ['conferenceSession' => $conferenceSession])
+            ->assertSee('Assign MC')
             ->assertSee('Choose enabled user')
-            ->assertSee($enabledMc->name)
+            ->assertSee($availableMc->name)
+            ->assertDontSee('value="'.$enabledMc->id.'"', false)
             ->assertDontSee($disabledMc->name)
-            ->set('assignUserId', $enabledMc->id)
+            ->set('assignUserId', $availableMc->id)
             ->call('assignMc')
-            ->assertSee('MC assigned.');
+            ->assertDispatched('toast', type: 'success', message: 'MC assigned.')
+            ->assertSee('Remove');
 
-        $this->assertTrue($conferenceSession->fresh()->mcs->contains($enabledMc));
+        $this->assertTrue($conferenceSession->fresh()->mcs->contains($availableMc));
     }
 }
