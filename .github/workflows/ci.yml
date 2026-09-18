@@ -93,3 +93,6 @@ jobs:
           tags: conference-mc-web:test
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
+      - name: Validate nginx proxy forwarding
+        run: |
+          docker run --rm --add-host app:127.0.0.1 --entrypoint sh conference-mc-web:test -lc 'nginx -t && grep -Fq "fastcgi_param HTTP_X_FORWARDED_FOR \$http_x_forwarded_for;" /etc/nginx/conf.d/default.conf && grep -Fq "fastcgi_param HTTP_X_FORWARDED_HOST \$http_x_forwarded_host;" /etc/nginx/conf.d/default.conf && grep -Fq "fastcgi_param HTTP_X_FORWARDED_PORT \$http_x_forwarded_port;" /etc/nginx/conf.d/default.conf && grep -Fq "fastcgi_param HTTP_X_FORWARDED_PROTO \$http_x_forwarded_proto;" /etc/nginx/conf.d/default.conf'
