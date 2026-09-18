@@ -1,3 +1,9 @@
+import { registerConnectivityStore } from './stores/connectivity';
+import { registerPrivateCache } from './pwa/private-cache';
+
+registerConnectivityStore();
+registerPrivateCache();
+
 window.liveReader = (sessions, timezone = 'UTC') => ({
     sessions,
     timezone,

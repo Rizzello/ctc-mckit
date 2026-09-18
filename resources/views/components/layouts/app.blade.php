@@ -3,11 +3,14 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#0f172a">
+        <link rel="manifest" href="/manifest.webmanifest">
         <title>{{ config('app.name', 'MC Kit') }}</title>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
     </head>
-    <body class="min-h-screen bg-slate-50 text-slate-950 antialiased">
+    <body data-private-cache-namespace="{{ session('private_cache_namespace') }}" class="min-h-screen bg-slate-50 text-slate-950 antialiased">
+        <div x-cloak x-show="$store.connectivity.offline" x-transition role="status" class="fixed inset-x-0 top-0 z-50 border-b border-amber-300 bg-amber-100 px-4 py-2 text-center text-sm font-semibold text-amber-950">Offline · changes are disabled</div>
         <header x-data="{ menuOpen: false }" x-on:keydown.escape.window="menuOpen = false" class="sticky top-0 z-30 border-b border-slate-200 bg-white">
             <div class="mx-auto grid h-14 max-w-5xl grid-cols-[1fr_auto_1fr] items-center px-4">
                 <a href="{{ route('agenda') }}" wire:navigate class="min-h-11 rounded-md px-1 py-3 text-sm font-bold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">MC Kit</a>
@@ -26,7 +29,7 @@
                         <a href="{{ route('admin.sessionize') }}" wire:navigate x-on:click="menuOpen = false" aria-current="{{ request()->routeIs('admin.sessionize') ? 'page' : 'false' }}" @class(['min-h-11 rounded-md px-4 py-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700', 'bg-sky-100 text-sky-950' => request()->routeIs('admin.sessionize'), 'text-slate-700 hover:bg-slate-100' => !request()->routeIs('admin.sessionize')])>Sync</a>
                     @endcan
                 </div>
-                <form method="POST" action="{{ route('logout') }}" class="mt-auto border-t border-slate-200 pt-4">@csrf<button type="submit" class="min-h-11 w-full rounded-md border border-slate-300 px-4 text-left text-sm font-semibold text-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Log out</button></form>
+                <form method="POST" action="{{ route('logout') }}" data-private-cache-logout class="mt-auto border-t border-slate-200 pt-4">@csrf<button type="submit" class="min-h-11 w-full rounded-md border border-slate-300 px-4 text-left text-sm font-semibold text-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Log out</button></form>
             </nav>
         </header>
         <main class="mx-auto max-w-5xl px-4 py-6">{{ $slot }}</main>

@@ -44,6 +44,7 @@
         <button
             wire:click="queueSync"
             wire:loading.attr="disabled"
+            x-bind:disabled="$store.connectivity.offline"
             @disabled(! $configured || $syncInProgress)
             type="button"
             class="min-h-11 rounded-md bg-sky-800 px-4 font-semibold text-white transition hover:bg-sky-900 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
