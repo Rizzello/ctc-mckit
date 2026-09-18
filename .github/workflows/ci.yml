@@ -81,6 +81,10 @@ jobs:
           tags: conference-mc-app:test
           cache-from: type=gha,scope=app
           cache-to: type=gha,mode=max,scope=app
+      - name: Smoke test production application image
+        run: |
+          docker run --rm --user www-data conference-mc-app:test sh -lc 'test -d storage/framework/cache/data && test -d storage/framework/sessions && test -d storage/framework/views && test -d storage/logs && test -d bootstrap/cache && test -w storage/framework/cache/data && test -w storage/framework/sessions && test -w storage/framework/views && test -w storage/logs && test -w bootstrap/cache'
+          docker run --rm --user www-data -e APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= -e CACHE_STORE=array -e SESSION_DRIVER=array -e QUEUE_CONNECTION=sync conference-mc-app:test php artisan --version
       - uses: docker/build-push-action@v6
         with:
           context: .

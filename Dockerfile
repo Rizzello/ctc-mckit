@@ -33,7 +33,13 @@ COPY --from=vendor /var/www/html/vendor ./vendor
 COPY . .
 COPY --from=assets /var/www/html/public/build ./public/build
 
-RUN chown -R www-data:www-data bootstrap/cache storage
+RUN mkdir -p \
+        storage/framework/cache/data \
+        storage/framework/sessions \
+        storage/framework/views \
+        storage/logs \
+        bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
 
 USER www-data
 
