@@ -12,6 +12,7 @@ use App\Sessionize\SessionizeImportData;
 use App\Sessionize\SessionizeNormalizer;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use RuntimeException;
 use Tests\TestCase;
 
 class UpdateConferenceScheduleTest extends TestCase
@@ -75,14 +76,48 @@ class UpdateConferenceScheduleTest extends TestCase
         $updater = app(UpdateConferenceSchedule::class);
         $updater->execute($this->data());
 
-        $updater->execute(new SessionizeImportData([], [], []));
+        $updater->execute(new SessionizeImportData([], [], [$this->data()->sessions[0]]));
 
-        $this->assertTrue(ConferenceSession::query()->where('sessionize_id', 'talk-1')->sole()->sessionize_status->value === 'removed');
-        $this->assertCount(0, ConferenceSession::active()->where('sessionize_id', 'talk-1')->get());
+        $this->assertTrue(ConferenceSession::query()->where('sessionize_id', 'service-1')->sole()->sessionize_status->value === 'removed');
+        $this->assertCount(0, ConferenceSession::active()->where('sessionize_id', 'service-1')->get());
 
         $updater->execute($this->data());
 
         $this->assertTrue(ConferenceSession::query()->where('sessionize_id', 'talk-1')->sole()->sessionize_status->value === 'active');
+    }
+
+    public function test_rejects_an_empty_import_when_an_active_schedule_exists_without_mutating_it(): void
+    {
+        $room = Room::factory()->create(['name' => 'Existing room']);
+        $session = ConferenceSession::factory()->create([
+            'room_id' => $room->id,
+            'title' => 'Existing schedule entry',
+            'mc_description' => 'Local preparation.',
+        ]);
+
+        try {
+            app(UpdateConferenceSchedule::class)->execute(new SessionizeImportData([], [], []));
+            $this->fail('Expected the empty import to be rejected.');
+        } catch (RuntimeException $exception) {
+            $this->assertSame('Sessionize import contains no sessions while active sessions already exist.', $exception->getMessage());
+        }
+
+        $session = $session->fresh();
+
+        $this->assertSame('Existing schedule entry', $session->title);
+        $this->assertSame('Local preparation.', $session->mc_description);
+        $this->assertSame('active', $session->sessionize_status->value);
+        $this->assertSame('Existing room', $room->fresh()->name);
+    }
+
+    public function test_empty_import_is_a_safe_no_op_without_an_active_schedule(): void
+    {
+        $stats = app(UpdateConferenceSchedule::class)->execute(new SessionizeImportData([], [], []));
+
+        $this->assertSame(['rooms' => 0, 'speakers' => 0, 'sessions' => 0, 'removed' => 0], $stats);
+        $this->assertSame(0, ConferenceSession::query()->count());
+        $this->assertSame(0, Room::query()->count());
+        $this->assertSame(0, Speaker::query()->count());
     }
 
     public function test_rolls_back_the_entire_schedule_when_persistence_fails(): void

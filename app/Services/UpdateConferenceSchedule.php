@@ -16,6 +16,14 @@ class UpdateConferenceSchedule
      */
     public function execute(SessionizeImportData $data): array
     {
+        if ($data->sessions === []) {
+            if (ConferenceSession::active()->exists()) {
+                throw new \RuntimeException('Sessionize import contains no sessions while active sessions already exist.');
+            }
+
+            return ['rooms' => 0, 'speakers' => 0, 'sessions' => 0, 'removed' => 0];
+        }
+
         return DB::transaction(function () use ($data): array {
             $rooms = $this->syncRooms($data);
             $speakers = $this->syncSpeakers($data);

@@ -20,7 +20,7 @@ class SessionizeNormalizerTest extends TestCase
         $this->assertSame('A practical discussion about resilient software.', $talk['description']);
         $this->assertSame('2027-06-01T07:15:00+00:00', $talk['starts_at']?->toIso8601String());
         $this->assertSame(['speaker-a', 'speaker-b'], $talk['speaker_ids']);
-        $this->assertSame('Engineering', $talk['categories'][0]['name']);
+        $this->assertSame(['Engineering'], $talk['categories']);
         $this->assertTrue($service['is_service_session']);
         $this->assertTrue($service['is_plenum_session']);
         $this->assertSame([], $service['speaker_ids']);
@@ -49,6 +49,26 @@ class SessionizeNormalizerTest extends TestCase
         $this->expectException(RuntimeException::class);
 
         app(SessionizeNormalizer::class)->normalize($payload);
+    }
+
+    public function test_normalizes_category_labels_in_their_original_order(): void
+    {
+        $payload = $this->payload();
+        $payload['all']['sessions'][0]['categoryItems'] = [
+            ['name' => 'Engineering'],
+            ['name' => ' Advanced '],
+            ['name' => 'Engineering'],
+            ['label' => 'Tech Talk: 40 min'],
+            ['name' => '   '],
+            [],
+            'Malformed',
+            42,
+        ];
+
+        $data = app(SessionizeNormalizer::class)->normalize($payload);
+        $talk = collect($data->sessions)->firstWhere('sessionize_id', 'talk-1');
+
+        $this->assertSame(['Engineering', 'Advanced', 'Tech Talk: 40 min'], $talk['categories']);
     }
 
     /** @return array{all: array<string, mixed>, grid: list<array<string, mixed>>} */

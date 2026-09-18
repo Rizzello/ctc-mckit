@@ -75,7 +75,7 @@ class SyncSessionize implements ShouldBeUnique, ShouldQueue
                 'exception' => $exception::class,
             ]);
 
-            throw new RuntimeException('Sessionize synchronization failed.');
+            throw $exception;
         }
     }
 }

@@ -12,7 +12,9 @@ use App\Services\UpdateConferenceSchedule;
 use App\Sessionize\SessionizeClient;
 use App\Sessionize\SessionizeNormalizer;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
@@ -60,7 +62,7 @@ class SessionizeSyncTest extends TestCase
                 app(UpdateConferenceSchedule::class),
             );
             $this->fail('Expected the remote failure to be rethrown.');
-        } catch (RuntimeException) {
+        } catch (RequestException) {
         }
 
         $syncRun = $syncRun->fresh();
@@ -104,6 +106,10 @@ class SessionizeSyncTest extends TestCase
             'https://sessionize.com/api/v2/test-event/view/GridSmart' => Http::response($this->fixture('grid-smart.json')),
         ]);
         $syncRun = SyncRun::factory()->create();
+        $existingSession = ConferenceSession::factory()->create([
+            'title' => 'Existing schedule entry',
+            'mc_description' => 'Local preparation.',
+        ]);
 
         try {
             (new SyncSessionize($syncRun->id))->handle(
@@ -112,11 +118,13 @@ class SessionizeSyncTest extends TestCase
                 app(UpdateConferenceSchedule::class),
             );
             $this->fail('Expected invalid schedule persistence to fail.');
-        } catch (RuntimeException) {
+        } catch (QueryException) {
         }
 
         $this->assertSame(SyncRunStatus::Failed, $syncRun->fresh()->status);
         $this->assertDatabaseMissing('rooms', ['sessionize_id' => '10']);
+        $this->assertSame('Existing schedule entry', $existingSession->fresh()->title);
+        $this->assertSame('Local preparation.', $existingSession->fresh()->mc_description);
     }
 
     public function test_admin_ui_queues_one_synchronization_without_fetching_remote_data(): void

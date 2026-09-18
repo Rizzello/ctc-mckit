@@ -44,7 +44,7 @@
                     class="relative col-span-full grid"
                     style="grid-template-columns: 4.5rem repeat({{ $rooms->count() }}, minmax(15rem, 1fr)); height: {{ $calendarHeight }}px;"
                 >
-                    <div class="sticky left-0 z-10 border-r border-slate-200 bg-white">
+                    <div class="sticky left-0 z-10 border-r border-slate-200">
                         @for ($hour = 0; $hour < $hourCount; $hour++)
                             <div
                                 class="absolute w-full px-3 text-xs font-semibold text-slate-500"

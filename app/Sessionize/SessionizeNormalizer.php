@@ -98,7 +98,7 @@ class SessionizeNormalizer
 
     /**
      * @param  list<array<string, mixed>>  $records
-     * @return array<string, array{sessionize_id: string, title: string, description: ?string, room_sessionize_id: ?string, starts_at: ?CarbonImmutable, ends_at: ?CarbonImmutable, status: ?string, is_confirmed: bool, is_service_session: bool, is_plenum_session: bool, categories: array<mixed>, speaker_ids: list<string>}>
+     * @return array<string, array{sessionize_id: string, title: string, description: ?string, room_sessionize_id: ?string, starts_at: ?CarbonImmutable, ends_at: ?CarbonImmutable, status: ?string, is_confirmed: bool, is_service_session: bool, is_plenum_session: bool, categories: list<string>, speaker_ids: list<string>}>
      */
     private function sessions(array $records): array
     {
@@ -120,7 +120,7 @@ class SessionizeNormalizer
 
     /**
      * @param  list<array<string, mixed>>  $grid
-     * @return array{0: array<string, array{sessionize_id: string, title: string, description: ?string, room_sessionize_id: ?string, starts_at: ?CarbonImmutable, ends_at: ?CarbonImmutable, status: ?string, is_confirmed: bool, is_service_session: bool, is_plenum_session: bool, categories: array<mixed>, speaker_ids: list<string>}>, 1: array<string, array{sessionize_id: string, name: string}>}
+     * @return array{0: array<string, array{sessionize_id: string, title: string, description: ?string, room_sessionize_id: ?string, starts_at: ?CarbonImmutable, ends_at: ?CarbonImmutable, status: ?string, is_confirmed: bool, is_service_session: bool, is_plenum_session: bool, categories: list<string>, speaker_ids: list<string>}>, 1: array<string, array{sessionize_id: string, name: string}>}
      */
     private function grid(array $grid): array
     {
@@ -171,7 +171,7 @@ class SessionizeNormalizer
 
     /**
      * @param  array<string, mixed>  $record
-     * @return array{sessionize_id: string, title: string, description: ?string, room_sessionize_id: ?string, starts_at: ?CarbonImmutable, ends_at: ?CarbonImmutable, status: ?string, is_confirmed: bool, is_service_session: bool, is_plenum_session: bool, categories: array<mixed>, speaker_ids: list<string>}
+     * @return array{sessionize_id: string, title: string, description: ?string, room_sessionize_id: ?string, starts_at: ?CarbonImmutable, ends_at: ?CarbonImmutable, status: ?string, is_confirmed: bool, is_service_session: bool, is_plenum_session: bool, categories: list<string>, speaker_ids: list<string>}
      */
     private function session(array $record): array
     {
@@ -192,9 +192,9 @@ class SessionizeNormalizer
     }
 
     /**
-     * @param  array{sessionize_id: string, title: string, description: ?string, room_sessionize_id: ?string, starts_at: ?CarbonImmutable, ends_at: ?CarbonImmutable, status: ?string, is_confirmed: bool, is_service_session: bool, is_plenum_session: bool, categories: array<mixed>, speaker_ids: list<string>}  $base
-     * @param  array{sessionize_id: string, title: string, description: ?string, room_sessionize_id: ?string, starts_at: ?CarbonImmutable, ends_at: ?CarbonImmutable, status: ?string, is_confirmed: bool, is_service_session: bool, is_plenum_session: bool, categories: array<mixed>, speaker_ids: list<string>}  $planning
-     * @return array{sessionize_id: string, title: string, description: ?string, room_sessionize_id: ?string, starts_at: ?CarbonImmutable, ends_at: ?CarbonImmutable, status: ?string, is_confirmed: bool, is_service_session: bool, is_plenum_session: bool, categories: array<mixed>, speaker_ids: list<string>}
+     * @param  array{sessionize_id: string, title: string, description: ?string, room_sessionize_id: ?string, starts_at: ?CarbonImmutable, ends_at: ?CarbonImmutable, status: ?string, is_confirmed: bool, is_service_session: bool, is_plenum_session: bool, categories: list<string>, speaker_ids: list<string>}  $base
+     * @param  array{sessionize_id: string, title: string, description: ?string, room_sessionize_id: ?string, starts_at: ?CarbonImmutable, ends_at: ?CarbonImmutable, status: ?string, is_confirmed: bool, is_service_session: bool, is_plenum_session: bool, categories: list<string>, speaker_ids: list<string>}  $planning
+     * @return array{sessionize_id: string, title: string, description: ?string, room_sessionize_id: ?string, starts_at: ?CarbonImmutable, ends_at: ?CarbonImmutable, status: ?string, is_confirmed: bool, is_service_session: bool, is_plenum_session: bool, categories: list<string>, speaker_ids: list<string>}
      */
     private function mergePlanning(array $base, array $planning): array
     {
@@ -245,13 +245,33 @@ class SessionizeNormalizer
 
     /**
      * @param  array<string, mixed>  $record
-     * @return array<mixed>
+     * @return list<string>
      */
     private function categories(array $record): array
     {
         $categories = $record['categoryItems'] ?? $record['categories'] ?? [];
 
-        return is_array($categories) ? $categories : [];
+        if (! is_array($categories) || ! array_is_list($categories)) {
+            return [];
+        }
+
+        $labels = [];
+
+        foreach ($categories as $category) {
+            if (! is_array($category) || array_is_list($category)) {
+                continue;
+            }
+
+            $label = $this->nullableString($category['name'] ?? $category['label'] ?? null);
+
+            $label = $label === null ? null : trim($label);
+
+            if ($label !== null && $label !== '' && ! in_array($label, $labels, true)) {
+                $labels[] = $label;
+            }
+        }
+
+        return $labels;
     }
 
     /** @return list<string> */
