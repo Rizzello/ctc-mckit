@@ -9,7 +9,7 @@
             @foreach ($dates as $scheduleDate)
                 <button
                     wire:click="$set('date', '{{ $scheduleDate }}')"
-                    x-bind:disabled="$store.connectivity.offline"
+                    x-bind:disabled="$store.pwa.offline"
                     type="button"
                     @class([
                         'min-h-11 shrink-0 rounded-md border px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700',

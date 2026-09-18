@@ -44,19 +44,19 @@
         <form wire:submit="saveMcContent" class="space-y-3">
             <label class="grid gap-1 text-sm font-semibold" for="mc-description">
                 Host briefing
-                <textarea id="mc-description" wire:model="mcDescription" x-bind:readonly="$store.connectivity.offline" rows="4" class="rounded-md border border-slate-300 bg-white p-3"></textarea>
+                <textarea id="mc-description" wire:model="mcDescription" x-bind:readonly="$store.pwa.offline" rows="4" class="rounded-md border border-slate-300 bg-white p-3"></textarea>
             </label>
             @error('mc_description')
                 <p class="text-sm text-red-700">{{ $message }}</p>
             @enderror
             <label class="grid gap-1 text-sm font-semibold" for="mc-script">
                 Suggested wording
-                <textarea id="mc-script" wire:model="mcScript" x-bind:readonly="$store.connectivity.offline" rows="8" class="rounded-md border border-slate-300 bg-white p-3"></textarea>
+                <textarea id="mc-script" wire:model="mcScript" x-bind:readonly="$store.pwa.offline" rows="8" class="rounded-md border border-slate-300 bg-white p-3"></textarea>
             </label>
             @error('mc_script')
                 <p class="text-sm text-red-700">{{ $message }}</p>
             @enderror
-            <button type="submit" x-bind:disabled="$store.connectivity.offline" class="min-h-11 rounded-md bg-sky-800 px-4 font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300">Save preparation</button>
+            <button type="submit" x-bind:disabled="$store.pwa.offline" class="min-h-11 rounded-md bg-sky-800 px-4 font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300">Save preparation</button>
         </form>
     </section>
 
@@ -67,7 +67,7 @@
                 <p class="mt-1 text-sm text-slate-600">People responsible for this session.</p>
             </div>
             @can('assignMc', [$conferenceSession, auth()->user()])
-                <button x-on:click="$refs.mcDialog.showModal()" x-bind:disabled="$store.connectivity.offline" type="button" class="min-h-11 shrink-0 rounded-md bg-slate-900 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Assign MC</button>
+                <button x-on:click="$refs.mcDialog.showModal()" x-bind:disabled="$store.pwa.offline" type="button" class="min-h-11 shrink-0 rounded-md bg-slate-900 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Assign MC</button>
             @endcan
         </div>
 
@@ -76,7 +76,7 @@
                 <article class="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
                     <p class="font-semibold">{{ $mc->name }}</p>
                     @can('unassignMc', [$conferenceSession, $mc])
-                        <button wire:click="unassignMc({{ $mc->id }})" x-bind:disabled="$store.connectivity.offline" type="button" class="min-h-11 shrink-0 rounded-md px-3 text-sm font-semibold text-red-800 disabled:cursor-not-allowed disabled:text-slate-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700">Remove</button>
+                        <button wire:click="unassignMc({{ $mc->id }})" x-bind:disabled="$store.pwa.offline" type="button" class="min-h-11 shrink-0 rounded-md px-3 text-sm font-semibold text-red-800 disabled:cursor-not-allowed disabled:text-slate-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700">Remove</button>
                     @endcan
                 </article>
             @empty
@@ -97,13 +97,13 @@
 
                     <form wire:submit="assignMc" class="flex gap-2">
                         <label class="sr-only" for="assign-user">Assign MC</label>
-                        <select id="assign-user" wire:model="assignUserId" x-bind:disabled="$store.connectivity.offline" class="min-h-11 grow rounded-md border border-slate-300 bg-white px-3">
+                        <select id="assign-user" wire:model="assignUserId" x-bind:disabled="$store.pwa.offline" class="min-h-11 grow rounded-md border border-slate-300 bg-white px-3">
                             <option value="">Choose enabled user</option>
                             @foreach ($assignableUsers as $user)
                                 <option value="{{ $user->id }}">{{ $user->name }}</option>
                             @endforeach
                         </select>
-                        <button type="submit" x-bind:disabled="$store.connectivity.offline" class="min-h-11 rounded-md bg-slate-900 px-4 font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300">Assign</button>
+                        <button type="submit" x-bind:disabled="$store.pwa.offline" class="min-h-11 rounded-md bg-slate-900 px-4 font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300">Assign</button>
                     </form>
                     @error('assignUserId')
                         <p class="text-sm text-red-700">{{ $message }}</p>
@@ -125,7 +125,7 @@
                 <p class="mt-1 text-sm text-slate-600">Keep practical session details visible to everyone working on the event.</p>
             </div>
             @can('create', \App\Models\SessionNote::class)
-                <button x-on:click="$refs.noteDialog.showModal()" x-bind:disabled="$store.connectivity.offline" type="button" class="min-h-11 shrink-0 rounded-md bg-slate-900 px-4 font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Add note</button>
+                <button x-on:click="$refs.noteDialog.showModal()" x-bind:disabled="$store.pwa.offline" type="button" class="min-h-11 shrink-0 rounded-md bg-slate-900 px-4 font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Add note</button>
             @endcan
         </div>
 
@@ -144,7 +144,7 @@
 
                 <label class="grid gap-2 text-sm font-semibold" for="note-body">
                     Note
-                    <textarea id="note-body" wire:model="noteBody" x-bind:readonly="$store.connectivity.offline" rows="7" aria-describedby="note-body-error" class="min-h-36 rounded-md border border-slate-300 p-3 text-base leading-relaxed focus-visible:outline-2 focus-visible:outline-sky-700" placeholder="Add a technical detail for this session."></textarea>
+                    <textarea id="note-body" wire:model="noteBody" x-bind:readonly="$store.pwa.offline" rows="7" aria-describedby="note-body-error" class="min-h-36 rounded-md border border-slate-300 p-3 text-base leading-relaxed focus-visible:outline-2 focus-visible:outline-sky-700" placeholder="Add a technical detail for this session."></textarea>
                 </label>
                 @error('body')
                     <p id="note-body-error" class="text-sm text-red-700">{{ $message }}</p>
@@ -152,7 +152,7 @@
 
                 <div class="flex justify-end gap-3">
                     <button x-on:click="$refs.noteDialog.close()" type="button" class="min-h-11 rounded-md px-4 font-semibold text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Cancel</button>
-                    <button type="submit" x-bind:disabled="$store.connectivity.offline" class="min-h-11 rounded-md bg-sky-800 px-4 font-semibold text-white data-loading:cursor-wait data-loading:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-300">Save note</button>
+                    <button type="submit" x-bind:disabled="$store.pwa.offline" class="min-h-11 rounded-md bg-sky-800 px-4 font-semibold text-white data-loading:cursor-wait data-loading:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-300">Save note</button>
                 </div>
                 </form>
             </dialog>
@@ -165,9 +165,9 @@
                         <p class="text-sm text-slate-600">{{ $note->created_at->format('D M · H:i') }}</p>
                         @can('update', $note)
                             <div class="flex shrink-0 gap-2">
-                                <button wire:click="editNote({{ $note->id }})" x-bind:disabled="$store.connectivity.offline" type="button" class="min-h-11 rounded-md px-3 text-sm font-semibold text-sky-800 disabled:cursor-not-allowed disabled:text-slate-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Edit</button>
+                                <button wire:click="editNote({{ $note->id }})" x-bind:disabled="$store.pwa.offline" type="button" class="min-h-11 rounded-md px-3 text-sm font-semibold text-sky-800 disabled:cursor-not-allowed disabled:text-slate-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Edit</button>
                                 @can('delete', $note)
-                                    <button wire:click="deleteNote({{ $note->id }})" wire:confirm="Delete this note?" x-bind:disabled="$store.connectivity.offline" type="button" class="min-h-11 rounded-md px-3 text-sm font-semibold text-red-800 disabled:cursor-not-allowed disabled:text-slate-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700">Delete</button>
+                                    <button wire:click="deleteNote({{ $note->id }})" wire:confirm="Delete this note?" x-bind:disabled="$store.pwa.offline" type="button" class="min-h-11 rounded-md px-3 text-sm font-semibold text-red-800 disabled:cursor-not-allowed disabled:text-slate-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700">Delete</button>
                                 @endcan
                             </div>
                         @endcan
@@ -197,14 +197,14 @@
                         </div>
                         <label class="grid gap-2 text-sm font-semibold" for="edit-note-body">
                             Note
-                            <textarea id="edit-note-body" wire:model="editingNoteBody" x-bind:readonly="$store.connectivity.offline" rows="7" aria-describedby="edit-note-body-error" class="min-h-36 rounded-md border border-slate-300 p-3 text-base leading-relaxed focus-visible:outline-2 focus-visible:outline-sky-700"></textarea>
+                            <textarea id="edit-note-body" wire:model="editingNoteBody" x-bind:readonly="$store.pwa.offline" rows="7" aria-describedby="edit-note-body-error" class="min-h-36 rounded-md border border-slate-300 p-3 text-base leading-relaxed focus-visible:outline-2 focus-visible:outline-sky-700"></textarea>
                         </label>
                         @error('editingNoteBody')
                             <p id="edit-note-body-error" class="text-sm text-red-700">{{ $message }}</p>
                         @enderror
                         <div class="flex justify-end gap-3">
                             <button x-on:click="$refs.editNoteDialog.close()" type="button" class="min-h-11 rounded-md px-4 font-semibold text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Cancel</button>
-                            <button type="submit" x-bind:disabled="$store.connectivity.offline" class="min-h-11 rounded-md bg-sky-800 px-4 font-semibold text-white data-loading:cursor-wait data-loading:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-300">Save note</button>
+                            <button type="submit" x-bind:disabled="$store.pwa.offline" class="min-h-11 rounded-md bg-sky-800 px-4 font-semibold text-white data-loading:cursor-wait data-loading:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-300">Save note</button>
                         </div>
                     </form>
                 </dialog>

@@ -10,7 +10,7 @@
         @livewireStyles
     </head>
     <body data-private-cache-namespace="{{ session('private_cache_namespace') }}" class="min-h-screen bg-slate-50 text-slate-950 antialiased">
-        <div x-cloak x-show="$store.connectivity.offline" x-transition role="status" class="fixed inset-x-0 top-0 z-50 border-b border-amber-300 bg-amber-100 px-4 py-2 text-center text-sm font-semibold text-amber-950">Offline · changes are disabled</div>
+        <div x-cloak x-show="$store.pwa.offline" x-transition role="status" class="fixed inset-x-0 top-0 z-50 border-b border-amber-300 bg-amber-100 px-4 py-2 text-center text-sm font-semibold text-amber-950">Offline · changes are disabled</div>
         <header x-data="{ menuOpen: false }" x-on:keydown.escape.window="menuOpen = false" class="sticky top-0 z-30 border-b border-slate-200 bg-white">
             <div class="mx-auto grid h-14 max-w-5xl grid-cols-[1fr_auto_1fr] items-center px-4">
                 <a href="{{ route('agenda') }}" wire:navigate class="min-h-11 rounded-md px-1 py-3 text-sm font-bold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">MC Kit</a>
@@ -33,6 +33,12 @@
             </nav>
         </header>
         <main class="mx-auto max-w-5xl px-4 py-6">{{ $slot }}</main>
+        <div x-cloak x-show="$store.pwa.warming || $store.pwa.ready || $store.pwa.error" aria-live="polite" class="fixed bottom-4 left-4 z-40 max-w-[calc(100vw-2rem)] rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-lg">
+            <span x-show="$store.pwa.warming">Preparing offline access…</span>
+            <span x-show="$store.pwa.ready && !$store.pwa.warming && !$store.pwa.error">Offline ready</span>
+            <span x-show="$store.pwa.error">Offline preparation failed.</span>
+            <button x-show="$store.pwa.error && $store.pwa.online" x-on:click="$dispatch('pwa:retry')" type="button" class="ml-2 min-h-11 rounded-md px-2 text-sky-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">Retry</button>
+        </div>
         <x-toasts />
         @livewireScripts
     </body>

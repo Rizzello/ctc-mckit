@@ -5,12 +5,12 @@
     </div>
 
     <form wire:submit="save" class="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
-        <label class="grid gap-1 font-semibold" for="name">Name<input id="name" wire:model="name" x-bind:readonly="$store.connectivity.offline" class="min-h-11 rounded-md border border-slate-300 px-3"></label>
+        <label class="grid gap-1 font-semibold" for="name">Name<input id="name" wire:model="name" x-bind:readonly="$store.pwa.offline" class="min-h-11 rounded-md border border-slate-300 px-3"></label>
         @error('name')<p class="text-sm text-red-700">{{ $message }}</p>@enderror
-        <label class="grid gap-1 font-semibold" for="email">Email<input id="email" wire:model="email" x-bind:readonly="$store.connectivity.offline" type="email" class="min-h-11 rounded-md border border-slate-300 px-3"></label>
+        <label class="grid gap-1 font-semibold" for="email">Email<input id="email" wire:model="email" x-bind:readonly="$store.pwa.offline" type="email" class="min-h-11 rounded-md border border-slate-300 px-3"></label>
         @error('email')<p class="text-sm text-red-700">{{ $message }}</p>@enderror
-        <label class="flex min-h-11 items-center gap-3"><input wire:model="isAdmin" x-bind:disabled="$store.connectivity.offline" type="checkbox" class="size-5 accent-sky-700"> Administrator</label>
-        <label class="flex min-h-11 items-center gap-3"><input wire:model="enabled" x-bind:disabled="$store.connectivity.offline" type="checkbox" class="size-5 accent-sky-700"> Enabled</label>
-        <button type="submit" x-bind:disabled="$store.connectivity.offline" class="min-h-11 rounded-md bg-sky-800 px-4 font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300">Create user</button>
+        <label class="flex min-h-11 items-center gap-3"><input wire:model="isAdmin" x-bind:disabled="$store.pwa.offline" type="checkbox" class="size-5 accent-sky-700"> Administrator</label>
+        <label class="flex min-h-11 items-center gap-3"><input wire:model="enabled" x-bind:disabled="$store.pwa.offline" type="checkbox" class="size-5 accent-sky-700"> Enabled</label>
+        <button type="submit" x-bind:disabled="$store.pwa.offline" class="min-h-11 rounded-md bg-sky-800 px-4 font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300">Create user</button>
     </form>
 </section>

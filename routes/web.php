@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\MagicLoginController;
+use App\Http\Controllers\OfflineManifestController;
 use App\Http\Middleware\EnsureOperationalAccess;
 use App\Models\ConferenceSession;
 use App\Models\User;
@@ -20,6 +21,7 @@ Route::middleware('guest')->group(function (): void {
 });
 
 Route::middleware(['auth', EnsureOperationalAccess::class])->group(function (): void {
+    Route::get('/offline/manifest', OfflineManifestController::class)->name('offline.manifest');
     Route::view('/agenda', 'app.agenda')->name('agenda');
     Route::view('/live', 'app.live')->name('live');
     Route::redirect('/schedule', '/agenda')->name('schedule');

@@ -1,4 +1,4 @@
-export function registerConnectivityStore() {
+export function registerPwaStore() {
     let registered = false;
 
     const register = () => {
@@ -8,8 +8,11 @@ export function registerConnectivityStore() {
 
         registered = true;
 
-        window.Alpine.store('connectivity', {
+        window.Alpine.store('pwa', {
             online: navigator.onLine,
+            warming: false,
+            ready: false,
+            error: false,
 
             init() {
                 window.addEventListener('online', () => {
@@ -24,7 +27,26 @@ export function registerConnectivityStore() {
             get offline() {
                 return !this.online;
             },
+
+            prepare() {
+                this.warming = true;
+                this.error = false;
+            },
+
+            prepared() {
+                this.warming = false;
+                this.ready = true;
+                this.error = false;
+            },
+
+            failed(hasExistingSnapshot = false) {
+                this.warming = false;
+                this.ready = hasExistingSnapshot;
+                this.error = true;
+            },
         });
+
+        document.dispatchEvent(new Event('mckit:pwa-store-ready'));
     };
 
     if (window.Alpine) {
