@@ -12,6 +12,8 @@ class DeleteSessionNote
     {
         Gate::forUser($actor)->authorize('delete', $sessionNote);
 
+        $conferenceSession = $sessionNote->conferenceSession;
         $sessionNote->delete();
+        $conferenceSession->touch();
     }
 }

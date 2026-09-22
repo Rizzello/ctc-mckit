@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -37,5 +38,13 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('sync-sessionize', fn (User $user): bool => $user->enabled && $user->is_admin);
 
         RateLimiter::for('magic-login', fn (Request $request): Limit => Limit::perMinute(30)->by($request->ip()));
+        RateLimiter::for('api-login-challenge', function (Request $request): Limit {
+            $email = Str::lower(trim($request->string('email')->toString()));
+            $ip = $request->ip() ?? 'unknown';
+
+            return Limit::perMinutes(10, 5)->by(hash('sha256', $email.'|'.$ip));
+        });
+        RateLimiter::for('api-login-ip', fn (Request $request): Limit => Limit::perMinutes(10, 20)->by(hash('sha256', $request->ip() ?? 'unknown')));
+        RateLimiter::for('api-login-otp', fn (Request $request): Limit => Limit::perMinutes(10, 10)->by(hash('sha256', (string) $request->session()->get('login_challenge_id').'|'.($request->ip() ?? 'unknown'))));
     }
 }

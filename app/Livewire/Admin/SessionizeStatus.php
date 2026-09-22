@@ -2,13 +2,12 @@
 
 namespace App\Livewire\Admin;
 
+use App\Actions\QueueSessionizeSync;
 use App\Enums\SyncRunStatus;
-use App\Jobs\SyncSessionize;
 use App\Models\SyncRun;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
 class SessionizeStatus extends Component
@@ -18,41 +17,14 @@ class SessionizeStatus extends Component
         $this->authorize('viewAny', User::class);
     }
 
-    public function queueSync(): void
+    public function queueSync(QueueSessionizeSync $queueSessionizeSync): void
     {
-        Gate::authorize('sync-sessionize');
-
-        if (! filled(config('sessionize.endpoint_url'))) {
-            $this->dispatch('toast', type: 'error', message: 'Sessionize is not configured.');
-
-            return;
-        }
-
-        $lock = Cache::lock('sessionize-sync-dispatch', 10);
-
-        if (! $lock->get()) {
-            $this->dispatch('toast', type: 'info', message: 'A synchronization is already being prepared.');
-
-            return;
-        }
-
         try {
-            $isRunning = SyncRun::query()
-                ->whereIn('status', [SyncRunStatus::Queued->value, SyncRunStatus::Running->value])
-                ->exists();
-
-            if ($isRunning) {
-                $this->dispatch('toast', type: 'info', message: 'A synchronization is already in progress.');
-
-                return;
-            }
-
-            $syncRun = SyncRun::query()->create(['status' => SyncRunStatus::Queued]);
-            SyncSessionize::dispatch($syncRun->id);
-
+            $queueSessionizeSync->handle($this->currentUser());
             $this->dispatch('toast', type: 'success', message: 'Sessionize synchronization queued.');
-        } finally {
-            $lock->release();
+        } catch (ValidationException $exception) {
+            $message = $exception->errors()['sessionize'][0];
+            $this->dispatch('toast', type: str_starts_with($message, 'A synchronization is') ? 'info' : 'error', message: $message);
         }
     }
 
@@ -70,5 +42,14 @@ class SessionizeStatus extends Component
             'syncInProgress' => $lastSyncRun instanceof SyncRun
                 && in_array($lastSyncRun->status->value, [SyncRunStatus::Queued->value, SyncRunStatus::Running->value], true),
         ]);
+    }
+
+    private function currentUser(): User
+    {
+        $user = auth()->user();
+
+        abort_unless($user instanceof User, 403);
+
+        return $user;
     }
 }

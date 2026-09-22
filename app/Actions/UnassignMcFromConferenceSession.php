@@ -13,5 +13,6 @@ class UnassignMcFromConferenceSession
         Gate::forUser($actor)->authorize('unassignMc', [$conferenceSession, $mc]);
 
         $conferenceSession->mcs()->detach($mc);
+        $conferenceSession->touch();
     }
 }

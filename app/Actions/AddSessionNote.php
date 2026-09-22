@@ -22,6 +22,7 @@ class AddSessionNote
         $sessionNote->conferenceSession()->associate($conferenceSession);
         $sessionNote->author()->associate($actor);
         $sessionNote->save();
+        $conferenceSession->touch();
 
         return $sessionNote;
     }

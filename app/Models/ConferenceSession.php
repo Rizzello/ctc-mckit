@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\SessionizePresenceStatus;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Database\Factories\ConferenceSessionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -15,6 +16,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['room_id', 'sessionize_id', 'title', 'description', 'starts_at', 'ends_at', 'status', 'is_confirmed', 'is_service_session', 'is_plenum_session', 'categories', 'sessionize_status', 'mc_description', 'mc_script'])]
+/**
+ * @property CarbonInterface|null $starts_at
+ * @property CarbonInterface|null $ends_at
+ */
 class ConferenceSession extends Model
 {
     /** @use HasFactory<ConferenceSessionFactory> */

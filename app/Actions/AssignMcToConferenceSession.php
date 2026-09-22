@@ -20,5 +20,6 @@ class AssignMcToConferenceSession
         }
 
         $conferenceSession->mcs()->syncWithoutDetaching([$mc->id]);
+        $conferenceSession->touch();
     }
 }

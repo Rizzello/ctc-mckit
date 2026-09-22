@@ -18,6 +18,7 @@ class UpdateSessionNote
         ]);
 
         $sessionNote->update($attributes);
+        $sessionNote->conferenceSession()->touch();
 
         return $sessionNote;
     }
