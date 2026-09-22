@@ -25,7 +25,10 @@ services:
             - mysql
             - mailpit
     frontend:
-        image: 'node:26-alpine'
+        build:
+            context: './frontend'
+            dockerfile: Dockerfile
+        image: 'mckit-frontend-dev'
         working_dir: /var/www/html/frontend
         command: sh -lc 'npm ci && npm run dev -- --hostname 0.0.0.0'
         ports:

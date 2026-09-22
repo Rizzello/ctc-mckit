@@ -6,9 +6,11 @@ COPY composer.json composer.lock ./
 
 RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader --no-scripts
 
-FROM node:26-alpine AS frontend
+FROM node:24.14.0-alpine AS frontend
 
 WORKDIR /var/www/html/frontend
+
+RUN npm install --global npm@11.12.0
 
 COPY frontend/package.json frontend/package-lock.json ./
 

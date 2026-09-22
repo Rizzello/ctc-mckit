@@ -12,8 +12,8 @@
         "build": "quasar build",
         "build:pwa": "quasar build -m pwa",
         "typecheck": "vue-tsc --noEmit",
-        "generate:api": "openapi-typescript ../docs/openapi.yaml -o src/types/generated/api.ts && prettier --write src/types/generated/api.ts",
-        "check:api": "openapi-typescript ../docs/openapi.yaml -o /tmp/mckit-api.ts && prettier --write /tmp/mckit-api.ts && cmp --silent /tmp/mckit-api.ts src/types/generated/api.ts",
+        "generate:api": "openapi-typescript ../docs/openapi.yaml -o src/types/generated/api.ts && prettier --config .prettierrc.json --write src/types/generated/api.ts",
+        "check:api": "openapi-typescript ../docs/openapi.yaml -o /tmp/mckit-api.ts && prettier --config .prettierrc.json --write /tmp/mckit-api.ts && diff -u src/types/generated/api.ts /tmp/mckit-api.ts",
         "test": "vitest run --config vitest.config.ts",
         "postinstall": "quasar prepare --silent"
     },
@@ -56,6 +56,8 @@
         "vuejs"
     ],
     "engines": {
-        "node": ">= 26 || ^24 || ^22.12"
-    }
+        "node": "24.14.0",
+        "npm": "11.12.0"
+    },
+    "packageManager": "npm@11.12.0"
 }

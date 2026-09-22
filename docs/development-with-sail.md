@@ -99,6 +99,10 @@ vendor/bin/sail artisan queue:work
 Pint formats PHP only. The Quasar workspace owns its own Prettier and ESLint
 checks, plus TypeScript validation and the PWA build:
 
+The frontend toolchain is pinned to Node `24.14.0` and npm `11.12.0` in
+`frontend/.node-version` and `frontend/package.json`. The Sail `frontend`
+service, the production frontend build stage, and CI use the same versions.
+
 ```bash
 vendor/bin/sail exec frontend npm run check:api
 vendor/bin/sail exec frontend npm run lint:check
