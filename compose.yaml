@@ -24,6 +24,20 @@ services:
         depends_on:
             - mysql
             - mailpit
+    frontend:
+        image: 'node:26-alpine'
+        working_dir: /var/www/html/frontend
+        command: sh -lc 'npm ci && npm run dev -- --hostname 0.0.0.0'
+        ports:
+            - '${FORWARD_FRONTEND_PORT:-9000}:9000'
+        environment:
+            QUASAR_BACKEND_URL: 'http://laravel.test'
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        depends_on:
+            - laravel.test
     mysql:
         image: 'mysql:8.4'
         ports:

@@ -1,0 +1,61 @@
+{
+    "name": "ctc-mckit-frontend",
+    "version": "0.0.1",
+    "description": "A Quasar Project",
+    "productName": "MC Kit",
+    "type": "module",
+    "private": true,
+    "scripts": {
+        "lint": "prettier --write \"**/*.{js,ts,vue,css,html,md,json}\" --ignore-path .gitignore && eslint --fix -c ./eslint.config.js \"./src*/**/*.{ts,js,cjs,mjs,vue}\"",
+        "lint:check": "prettier --check \"**/*.{js,ts,vue,css,html,md,json}\" --ignore-path .gitignore && eslint -c ./eslint.config.js \"./src*/**/*.{ts,js,cjs,mjs,vue}\"",
+        "dev": "quasar dev",
+        "build": "quasar build",
+        "build:pwa": "quasar build -m pwa",
+        "typecheck": "vue-tsc --noEmit",
+        "generate:api": "openapi-typescript ../docs/openapi.yaml -o src/types/generated/api.ts && prettier --write src/types/generated/api.ts",
+        "check:api": "npm run generate:api && git diff --exit-code -- src/types/generated/api.ts",
+        "test": "vitest run --config vitest.config.ts",
+        "postinstall": "quasar prepare --silent"
+    },
+    "dependencies": {
+        "@quasar/extras": "^2.1.0",
+        "dexie": "^4.4.6",
+        "pinia": "^4.0.2",
+        "quasar": "^2.33.1",
+        "vue": "^3.5.22",
+        "vue-router": "^5.0.6",
+        "zod": "^4.6.5"
+    },
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@quasar/app-vite": "^3.9.0",
+        "@types/node": "^22.19.11",
+        "@vue/eslint-config-prettier": "^10.2.0",
+        "@vue/eslint-config-typescript": "^14.7.0",
+        "autoprefixer": "^10.4.27",
+        "eslint": "^10.8.0",
+        "eslint-plugin-vue": "^10.8.0",
+        "fake-indexeddb": "^6.2.5",
+        "globals": "^17.4.0",
+        "openapi-typescript": "^7.13.0",
+        "postcss": "^8.5.8",
+        "prettier": "^3.8.1",
+        "typescript": "^5.9.3",
+        "vite-plugin-checker": "^0.14.5",
+        "vitest": "^3.2.7",
+        "vue-eslint-parser": "^10.4.0",
+        "vue-tsc": "^3.3.3"
+    },
+    "keywords": [
+        "quasar",
+        "quasar-app",
+        "quasar-cli",
+        "quasar-app-vite",
+        "vite",
+        "vue",
+        "vuejs"
+    ],
+    "engines": {
+        "node": ">= 26 || ^24 || ^22.12"
+    }
+}

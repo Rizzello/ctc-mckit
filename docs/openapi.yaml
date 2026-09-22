@@ -1,0 +1,99 @@
+openapi: 3.1.0
+info:
+  title: MC Kit API
+  version: v1
+servers:
+  - url: /api/v1
+paths:
+  /me:
+    get:
+      operationId: getCurrentUser
+      responses:
+        '200': { description: Current user, content: { application/json: { schema: { $ref: '#/components/schemas/UserResponse' } } } }
+  /snapshot:
+    get:
+      operationId: getSnapshot
+      responses:
+        '200': { description: Active conference snapshot, content: { application/json: { schema: { $ref: '#/components/schemas/Snapshot' } } } }
+  /auth/challenge:
+    post:
+      operationId: requestChallenge
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [email], properties: { email: { type: string, format: email } } } } } }
+      responses: { '200': { description: Generic response } }
+  /auth/verify-otp:
+    post:
+      operationId: verifyOtp
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [otp], properties: { otp: { type: string, pattern: '^\\d{6}$' } } } } } }
+      responses: { '200': { description: Authenticated user, content: { application/json: { schema: { $ref: '#/components/schemas/UserResponse' } } } } }
+  /logout:
+    post: { operationId: logout, responses: { '204': { description: Signed out } } }
+components:
+  schemas:
+    User:
+      type: object
+      required: [id, name, email, is_admin, enabled]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string, format: email }
+        is_admin: { type: boolean }
+        enabled: { type: boolean }
+    AssignedMc:
+      type: object
+      required: [id, name]
+      properties: { id: { type: integer }, name: { type: string } }
+    Room:
+      type: object
+      required: [id, sessionize_id, name]
+      properties: { id: { type: integer }, sessionize_id: { type: string }, name: { type: string } }
+    Speaker:
+      type: object
+      required: [id, sessionize_id, name, links]
+      properties:
+        id: { type: integer }
+        sessionize_id: { type: string }
+        name: { type: string }
+        tagline: { type: [string, 'null'] }
+        bio: { type: [string, 'null'] }
+        photo_url: { type: [string, 'null'] }
+        links: { type: array, items: {} }
+    Note:
+      type: object
+      required: [id, body, created_at, updated_at]
+      properties: { id: { type: integer }, body: { type: string }, created_at: { type: string, format: date-time }, updated_at: { type: string, format: date-time } }
+    Session:
+      type: object
+      required: [id, sessionize_id, title, is_confirmed, is_service_session, is_plenum_session, categories, speakers, mcs, notes]
+      properties:
+        id: { type: integer }
+        sessionize_id: { type: string }
+        title: { type: string }
+        description: { type: [string, 'null'] }
+        room_id: { type: [integer, 'null'] }
+        starts_at: { type: [string, 'null'], format: date-time }
+        ends_at: { type: [string, 'null'], format: date-time }
+        status: { type: [string, 'null'] }
+        is_confirmed: { type: boolean }
+        is_service_session: { type: boolean }
+        is_plenum_session: { type: boolean }
+        categories: { type: array, items: { type: string } }
+        mc_description: { type: [string, 'null'] }
+        mc_script: { type: [string, 'null'] }
+        room: { anyOf: [{ $ref: '#/components/schemas/Room' }, { type: 'null' }] }
+        speakers: { type: array, items: { $ref: '#/components/schemas/Speaker' } }
+        mcs: { type: array, items: { $ref: '#/components/schemas/AssignedMc' } }
+        notes: { type: array, items: { $ref: '#/components/schemas/Note' } }
+    Snapshot:
+      type: object
+      required: [version, generated_at, current_user, rooms, speakers, sessions]
+      properties:
+        version: { type: string }
+        generated_at: { type: string, format: date-time }
+        current_user: { $ref: '#/components/schemas/User' }
+        rooms: { type: array, items: { $ref: '#/components/schemas/Room' } }
+        speakers: { type: array, items: { $ref: '#/components/schemas/Speaker' } }
+        sessions: { type: array, items: { $ref: '#/components/schemas/Session' } }
+    UserResponse:
+      type: object
+      required: [data]
+      properties: { data: { $ref: '#/components/schemas/User' } }
