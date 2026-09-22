@@ -13,7 +13,7 @@
         "build:pwa": "quasar build -m pwa",
         "typecheck": "vue-tsc --noEmit",
         "generate:api": "openapi-typescript ../docs/openapi.yaml -o src/types/generated/api.ts && prettier --write src/types/generated/api.ts",
-        "check:api": "npm run generate:api && git diff --exit-code -- src/types/generated/api.ts",
+        "check:api": "openapi-typescript ../docs/openapi.yaml -o /tmp/mckit-api.ts && prettier --write /tmp/mckit-api.ts && cmp --silent /tmp/mckit-api.ts src/types/generated/api.ts",
         "test": "vitest run --config vitest.config.ts",
         "postinstall": "quasar prepare --silent"
     },

@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Enums\SyncRunStatus;
 use App\Jobs\SyncSessionize;
-use App\Livewire\Admin\SessionizeStatus;
 use App\Models\ConferenceSession;
 use App\Models\SyncRun;
 use App\Models\User;
@@ -17,7 +16,6 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
-use Livewire\Livewire;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -127,19 +125,15 @@ class SessionizeSyncTest extends TestCase
         $this->assertSame('Local preparation.', $existingSession->fresh()->mc_description);
     }
 
-    public function test_admin_ui_queues_one_synchronization_without_fetching_remote_data(): void
+    public function test_administrator_can_queue_one_synchronization_without_fetching_remote_data(): void
     {
         config(['sessionize.endpoint_url' => 'https://sessionize.com/api/v2/test-event/view/All']);
         Queue::fake([SyncSessionize::class]);
         $admin = User::factory()->admin()->create();
 
-        $this->actingAs($admin);
-
-        Livewire::test(SessionizeStatus::class)
-            ->assertSee('Configured')
-            ->assertDontSee('test-event')
-            ->call('queueSync')
-            ->assertDispatched('toast', type: 'success', message: 'Sessionize synchronization queued.');
+        $this->actingAs($admin)
+            ->postJson(route('api.v1.sessionize.sync'))
+            ->assertCreated();
 
         $syncRun = SyncRun::query()->sole();
         $this->assertSame(SyncRunStatus::Queued, $syncRun->status);
@@ -152,18 +146,15 @@ class SessionizeSyncTest extends TestCase
         Queue::fake([SyncSessionize::class]);
         $user = User::factory()->create();
 
-        $this->actingAs($user);
-
-        $this->get(route('admin.sessionize'))->assertForbidden();
+        $this->actingAs($user)->postJson(route('api.v1.sessionize.sync'))->assertForbidden();
 
         $admin = User::factory()->admin()->create();
         SyncRun::factory()->create(['status' => SyncRunStatus::Queued]);
         $this->actingAs($admin);
 
-        Livewire::test(SessionizeStatus::class)
-            ->assertSee('Synchronization in progress')
-            ->call('queueSync')
-            ->assertDispatched('toast', type: 'info', message: 'A synchronization is already in progress.');
+        $this->postJson(route('api.v1.sessionize.sync'))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['sessionize']);
 
         Queue::assertNothingPushed();
         $this->assertInstanceOf(ShouldBeUnique::class, new SyncSessionize(1));

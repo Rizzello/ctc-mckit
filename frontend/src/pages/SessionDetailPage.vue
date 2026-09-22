@@ -2,23 +2,22 @@
   <q-page class="q-pa-md">
     <q-btn flat icon="arrow_back" to="/sessions" label="Sessions" class="q-mb-md" />
     <template v-if="session">
-      <div class="text-caption text-primary">{{ timeAndRoom }}</div>
-      <h1 class="text-h5 q-mt-sm">{{ session.title }}</h1>
-      <div class="row q-gutter-sm q-mb-md">
-        <q-badge v-for="category in session.categories" :key="category" color="grey-7">{{
-          category
-        }}</q-badge>
-        <q-badge v-if="session.is_plenum_session" color="deep-purple">Plenary</q-badge>
-        <q-badge v-if="session.is_service_session" color="grey-7">Service session</q-badge>
-      </div>
-
       <q-card bordered flat class="q-mb-md">
-        <q-card-section
-          ><div class="text-subtitle1 text-weight-bold">Session information</div>
+        <q-card-section>
+          <div class="text-subtitle2 text-primary">{{ timeAndRoom }}</div>
+          <h1 class="text-h5 q-mt-sm q-mb-xs">{{ session.title }}</h1>
+          <div class="row q-gutter-sm q-mt-md">
+            <q-badge v-for="category in session.categories" :key="category" color="grey-7">{{
+              category
+            }}</q-badge>
+            <q-badge v-if="session.is_plenum_session" color="deep-purple">Plenary</q-badge>
+            <q-badge v-if="session.is_service_session" color="grey-7">Service session</q-badge>
+          </div>
+          <div class="text-subtitle1 text-weight-bold q-mt-lg">Session information</div>
           <div class="whitespace-pre-line q-mt-sm">
             {{ session.description || 'No session description is available.' }}
-          </div></q-card-section
-        >
+          </div>
+        </q-card-section>
       </q-card>
 
       <q-card v-for="speaker in session.speakers" :key="speaker.id" bordered flat class="q-mb-sm">

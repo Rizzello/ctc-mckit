@@ -6,19 +6,17 @@ COPY composer.json composer.lock ./
 
 RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader --no-scripts
 
-FROM node:26-alpine AS assets
+FROM node:26-alpine AS frontend
 
-WORKDIR /var/www/html
+WORKDIR /var/www/html/frontend
 
-COPY package.json package-lock.json ./
+COPY frontend/package.json frontend/package-lock.json ./
 
-RUN npm ci
+RUN npm ci --ignore-scripts
 
-COPY resources ./resources
-COPY vite.config.js ./
-COPY public ./public
+COPY frontend ./
 
-RUN npm run build
+RUN npm run postinstall && npm run build:pwa
 
 FROM php:8.5-fpm-alpine AS app
 
@@ -31,7 +29,7 @@ RUN apk add --no-cache icu-libs libzip \
 
 COPY --from=vendor /var/www/html/vendor ./vendor
 COPY . .
-COPY --from=assets /var/www/html/public/build ./public/build
+COPY --from=frontend /var/www/html/frontend/dist/pwa ./public
 
 RUN mkdir -p \
         storage/framework/cache/data \

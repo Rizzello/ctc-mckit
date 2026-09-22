@@ -59,14 +59,23 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: frontend/package-lock.json
       - run: npm ci
-      - run: npm run build
+      - run: npm run check:api
+      - run: npm run lint:check
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build:pwa
+      - run: npm audit --omit=dev
 
   docker:
     runs-on: ubuntu-latest
@@ -83,7 +92,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=app
       - name: Smoke test production application image
         run: |
-          docker run --rm --user www-data conference-mc-app:test sh -lc 'test -d storage/framework/cache/data && test -d storage/framework/sessions && test -d storage/framework/views && test -d storage/logs && test -d bootstrap/cache && test -w storage/framework/cache/data && test -w storage/framework/sessions && test -w storage/framework/views && test -w storage/logs && test -w bootstrap/cache'
+          docker run --rm --user www-data conference-mc-app:test sh -lc 'test -d storage/framework/cache/data && test -d storage/framework/sessions && test -d storage/framework/views && test -d storage/logs && test -d bootstrap/cache && test -w storage/framework/cache/data && test -w storage/framework/sessions && test -w storage/framework/views && test -w storage/logs && test -w bootstrap/cache && test -f public/index.html && test -f public/sw.js && test -f public/manifest.json'
           docker run --rm --user www-data -e APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= -e CACHE_STORE=array -e SESSION_DRIVER=array -e QUEUE_CONNECTION=sync conference-mc-app:test php artisan --version
       - uses: docker/build-push-action@v6
         with:
@@ -95,4 +104,4 @@ jobs:
           cache-to: type=gha,mode=max,scope=web
       - name: Validate nginx proxy forwarding
         run: |
-          docker run --rm --add-host app:127.0.0.1 --entrypoint sh conference-mc-web:test -lc 'nginx -t && grep -Fq "fastcgi_param HTTP_X_FORWARDED_FOR \$http_x_forwarded_for;" /etc/nginx/conf.d/default.conf && grep -Fq "fastcgi_param HTTP_X_FORWARDED_HOST \$http_x_forwarded_host;" /etc/nginx/conf.d/default.conf && grep -Fq "fastcgi_param HTTP_X_FORWARDED_PORT \$http_x_forwarded_port;" /etc/nginx/conf.d/default.conf && grep -Fq "fastcgi_param HTTP_X_FORWARDED_PROTO \$http_x_forwarded_proto;" /etc/nginx/conf.d/default.conf'
+          docker run --rm --add-host app:127.0.0.1 --entrypoint sh conference-mc-web:test -lc 'nginx -t && test -f /var/www/html/public/index.html && test -f /var/www/html/public/sw.js && grep -Fq "fastcgi_param HTTP_X_FORWARDED_FOR \$http_x_forwarded_for;" /etc/nginx/conf.d/default.conf && grep -Fq "fastcgi_param HTTP_X_FORWARDED_HOST \$http_x_forwarded_host;" /etc/nginx/conf.d/default.conf && grep -Fq "fastcgi_param HTTP_X_FORWARDED_PORT \$http_x_forwarded_port;" /etc/nginx/conf.d/default.conf && grep -Fq "fastcgi_param HTTP_X_FORWARDED_PROTO \$http_x_forwarded_proto;" /etc/nginx/conf.d/default.conf && grep -Fq "try_files \$uri \$uri/ /index.html;" /etc/nginx/conf.d/default.conf'

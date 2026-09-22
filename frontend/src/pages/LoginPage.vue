@@ -34,11 +34,16 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { requestChallenge } from '@/services/api/auth';
 
 const email = ref('');
-const error = ref<string | null>(null);
+const route = useRoute();
+const error = ref<string | null>(
+  route.query.error === 'magic-link-invalid'
+    ? 'This sign-in link is invalid or has expired.'
+    : null,
+);
 const loading = ref(false);
 const router = useRouter();
 

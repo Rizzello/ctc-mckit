@@ -20,9 +20,9 @@ async function ensureCsrfCookie(): Promise<void> {
     return;
   }
 
-  await fetch('/login', {
+  await fetch('/csrf-cookie', {
     credentials: 'same-origin',
-    headers: { Accept: 'text/html' },
+    headers: { Accept: 'application/json' },
   });
 }
 

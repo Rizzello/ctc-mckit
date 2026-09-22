@@ -18,13 +18,13 @@ class MagicLoginController extends Controller
         SignInUser $signInUser,
     ): RedirectResponse {
         if (! $request->hasValidSignature()) {
-            return redirect()->route('login')->with('error', 'This sign-in link is invalid or has expired.');
+            return redirect()->route('login', ['error' => 'magic-link-invalid']);
         }
 
         $user = $consumeMagicLoginLink->handle($challenge, $token);
 
         if (! $user instanceof User) {
-            return redirect()->route('login')->with('error', 'This sign-in link is invalid or has expired.');
+            return redirect()->route('login', ['error' => 'magic-link-invalid']);
         }
 
         $signInUser->handle($user, $request->session());

@@ -1,4 +1,8 @@
 {
+    "name": "MC Kit",
+    "short_name": "MC Kit",
+    "start_url": "/",
+    "scope": "/",
     "orientation": "portrait",
     "background_color": "#ffffff",
     "theme_color": "#027be3",

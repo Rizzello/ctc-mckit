@@ -1,15 +1,14 @@
 # Local development with Sail
 
-MC Kit currently serves two user interfaces during the frontend migration:
+MC Kit uses a Laravel API with a Quasar PWA frontend:
 
 | Interface | Address | Purpose |
 | --- | --- | --- |
-| Laravel / Livewire | `http://localhost` | Existing application |
-| Quasar SPA | `http://localhost:9000/app/login` | New application under development |
+| Laravel API | `http://localhost` | Backend, API, database-backed session, and Mailpit integration |
+| Quasar SPA | `http://localhost:9000/login` | Application frontend under development |
 | Mailpit | `http://localhost:8025` | Local passwordless-login email inbox |
 
-The Quasar application is mounted under `/app` to keep it separate from the
-existing Laravel interface. It proxies `/api` and `/login` requests to Laravel,
+The Quasar development server proxies API and CSRF-cookie requests to Laravel,
 so browser requests use the normal Laravel session and CSRF cookies.
 
 ## Starting the environment
@@ -42,25 +41,26 @@ The port can be changed locally with `FORWARD_FRONTEND_PORT`:
 FORWARD_FRONTEND_PORT=9001
 ```
 
-In that case the SPA is available at `http://localhost:9001/app/login`.
+In that case the SPA is available at `http://localhost:9001/login`.
 
 ## Testing passwordless login
 
 Use a pre-created enabled user at the Quasar login page. The development email
 is delivered to Mailpit, where the six-digit code can be copied into the SPA.
-The email magic link still opens Laravel directly; the OTP is the simplest way
-to continue testing the SPA during local development.
+Magic links work locally too: Laravel completes the sign-in, then redirects to
+the Quasar development server configured by `FRONTEND_URL` (port `9000` by
+default). After changing `FORWARD_FRONTEND_PORT`, restart Sail so Laravel
+receives the corresponding value.
 
 ## Laravel commands
 
-Run PHP, Artisan, Composer, and root Node commands through Sail. For example:
+Run PHP, Artisan, and Composer commands through Sail. For example:
 
 ```bash
 vendor/bin/sail artisan migrate
 vendor/bin/sail artisan test --compact
 vendor/bin/sail composer analyse
 vendor/bin/sail bin pint --format agent
-vendor/bin/sail npm run build
 ```
 
 The Composer scripts provide the usual project checks:
@@ -75,9 +75,9 @@ The Composer scripts provide the usual project checks:
 | `vendor/bin/sail composer demo:data` | Seeds the local demonstration schedule. |
 
 `vendor/bin/sail composer setup` is intended for a fresh local checkout: it
-installs PHP and root frontend dependencies, creates `.env` when needed,
-generates the application key, migrates the database, and builds the legacy
-Laravel frontend assets.
+installs PHP dependencies, creates `.env` when needed, generates the
+application key, and migrates the database. Install and build the Quasar
+workspace through the frontend commands below.
 
 Use Sail to inspect or control the local services as well:
 
@@ -100,6 +100,7 @@ Pint formats PHP only. The Quasar workspace owns its own Prettier and ESLint
 checks, plus TypeScript validation and the PWA build:
 
 ```bash
+vendor/bin/sail exec frontend npm run check:api
 vendor/bin/sail exec frontend npm run lint:check
 vendor/bin/sail exec frontend npm run typecheck
 vendor/bin/sail exec frontend npm run test
@@ -112,13 +113,20 @@ vendor/bin/sail exec frontend npm run build:pwa
 `docs/openapi.yaml`; `npm run check:api` additionally fails if regeneration
 would change the committed generated types.
 
+For a full frontend validation pass, run the commands above in that order. The
+production build command is `npm run build:pwa`; `npm run build` is available
+for a non-PWA Quasar build but is not the deployment artifact.
+
 ## Development-only differences
 
 The `frontend` Compose service is a local Vite development server. It is not a
-second production deployment and it does not replace Laravel, nginx, or the
-existing Livewire interface. The production-image integration for the Quasar
-build is a separate migration step.
+second production deployment. Production builds the Quasar PWA during the
+image build and serves it from the same application domain as Laravel.
 
 The frontend container installs dependencies with `npm ci` when it starts. The
 application source remains in the repository; generated dependency, build, and
 Quasar working directories are ignored.
+
+See [Laravel and Quasar integration](laravel-quasar-integration.md) for the
+runtime architecture, authentication flow, API contract, offline data model,
+and production build layout.

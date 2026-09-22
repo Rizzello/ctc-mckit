@@ -1,38 +1,25 @@
-# MC Kit (ctc-mckit-frontend)
+# MC Kit frontend
 
-## Install the dependencies
+The Quasar PWA is the production application interface. Laravel provides its
+same-origin JSON API and session authentication.
 
-```bash
-pnpm install
-# or: yarn/npm/bun install
-```
-
-### Start the app in development mode (HMR, error reporting, etc.)
+For local development, start Sail from the repository root and open
+`http://localhost:9000/login`:
 
 ```bash
-quasar dev
+vendor/bin/sail up -d
 ```
 
-### Format & Lint the files
+Run frontend checks through the Sail frontend service:
 
 ```bash
-pnpm run lint
-# or: yarn/npm/bun run lint
+vendor/bin/sail exec frontend npm run check:api
+vendor/bin/sail exec frontend npm run lint:check
+vendor/bin/sail exec frontend npm run typecheck
+vendor/bin/sail exec frontend npm run test
+vendor/bin/sail exec frontend npm run build:pwa
 ```
 
-...or just check formatting & linting:
-
-```bash
-pnpm run lint:check
-# or: yarn/npm/bun run lint:check
-```
-
-### Build the app for production
-
-```bash
-quasar build
-```
-
-### Customize the configuration
-
-See [Configuring quasar.config.js](https://v2.quasar.dev/quasar-cli-vite/quasar-config-file).
+`npm run generate:api` updates the generated API types from
+`../docs/openapi.yaml`. The production Docker build runs the PWA build and
+serves its output from the application domain.

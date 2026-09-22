@@ -14,6 +14,10 @@ import routes from './routes';
 
 let sessionValidated = false;
 
+export function resetSessionValidation(): void {
+  sessionValidated = false;
+}
+
 /*
  * If not building with SSR mode, you can
  * directly export the Router instantiation;
@@ -46,7 +50,31 @@ export default defineRouter(({ store }) => {
     const isGuestRoute = to.path.startsWith('/login');
 
     if (isGuestRoute) {
-      return true;
+      if (!connectivity.online || sessionValidated) {
+        return sessionValidated ? '/agenda' : true;
+      }
+
+      try {
+        const user = (await currentUser()).data;
+
+        if (conference.currentUser?.id !== user.id) {
+          await conference.clear();
+        }
+
+        if (!conference.currentUser) {
+          await conference.refresh();
+        }
+
+        sessionValidated = true;
+
+        return '/agenda';
+      } catch (error) {
+        if (!(error instanceof ApiError) || ![401, 403].includes(error.status ?? 0)) {
+          connectivity.syncError = true;
+        }
+
+        return true;
+      }
     }
 
     if (!connectivity.online) {
@@ -74,7 +102,6 @@ export default defineRouter(({ store }) => {
         connectivity.syncError = true;
 
         if (error instanceof ApiError && [401, 403].includes(error.status ?? 0)) {
-          await conference.clear();
           sessionValidated = false;
 
           return '/login';

@@ -74,6 +74,7 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Notify } from 'quasar';
 import { logout } from '@/services/api/auth';
+import { resetSessionValidation } from '@/router';
 import { useConferenceStore } from '@/stores/conference';
 import { useConnectivityStore } from '@/stores/connectivity';
 const drawer = ref(false);
@@ -94,6 +95,7 @@ async function signOut() {
   try {
     await logout();
     await conference.clear();
+    resetSessionValidation();
     await router.replace('/login');
   } catch {
     Notify.create({ type: 'negative', message: 'Sign out requires a connection.' });

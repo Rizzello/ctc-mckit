@@ -46,7 +46,7 @@ export default defineConfig((/* ctx */) => {
       // filenameBasedRouting: true,
 
       vueRouterMode: 'history',
-      vueRouterBase: '/app/',
+      vueRouterBase: '/',
 
       // publicPath: '/',
       // define: {},
@@ -87,7 +87,7 @@ export default defineConfig((/* ctx */) => {
           target: process.env.QUASAR_BACKEND_URL ?? 'http://laravel.test',
           changeOrigin: true,
         },
-        '/login': {
+        '/csrf-cookie': {
           target: process.env.QUASAR_BACKEND_URL ?? 'http://laravel.test',
           changeOrigin: true,
         },
@@ -186,6 +186,7 @@ export default defineConfig((/* ctx */) => {
       workboxMode: 'GenerateSW',
       extendPWAGenerateSWOptions(cfg) {
         cfg.runtimeCaching = [];
+        cfg.importScripts = ['legacy-cache-cleanup.js'];
       },
       // swFilename: 'sw.js',
       // manifestFilename: 'manifest.json',

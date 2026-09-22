@@ -1,20 +1,18 @@
-FROM node:22-alpine AS assets
+FROM node:26-alpine AS frontend
 
-WORKDIR /var/www/html
+WORKDIR /var/www/html/frontend
 
-COPY package.json package-lock.json ./
+COPY frontend/package.json frontend/package-lock.json ./
 
-RUN npm ci
+RUN npm ci --ignore-scripts
 
-COPY resources ./resources
-COPY vite.config.js ./
-COPY public ./public
+COPY frontend ./
 
-RUN npm run build
+RUN npm run postinstall && npm run build:pwa
 
 FROM nginxinc/nginx-unprivileged:1.29-alpine
 
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
-COPY --from=assets /var/www/html/public /var/www/html/public
+COPY --from=frontend /var/www/html/frontend/dist/pwa /var/www/html/public
 
 EXPOSE 8080
