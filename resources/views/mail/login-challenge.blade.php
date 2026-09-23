@@ -6,7 +6,7 @@
                 <p style="margin:0 0 8px;color:#1976d2;font-size:14px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">MC Kit</p>
                 <h1 style="margin:0 0 16px;font-size:28px;line-height:1.2;">Sign in to MC Kit</h1>
                 <p style="margin:0 0 24px;">Use the link below, or enter the code in the app.</p>
-                <p style="margin:0 0 24px;text-align:center;"><a href="{{ $magicUrl }}" style="display:inline-block;background:#1976d2;border-radius:4px;color:#ffffff;font-weight:700;padding:12px 18px;text-decoration:none;">Sign in to MC Kit</a></p>
+                <p style="margin:0 0 24px;text-align:center;"><a href="{{ $magicUrl }}" style="display:inline-block;background:#1976d2;border-radius:4px;color:#ffffff;font-weight:700;padding:12px 18px;text-decoration:none;" ses:no-track>Sign in to MC Kit</a></p>
                 <p style="margin:0 0 6px;color:#616161;font-size:14px;font-weight:700;">Your 6-digit code</p>
                 <p style="margin:0 0 24px;background:#f5f5f5;border-radius:4px;color:#1976d2;font-size:28px;font-weight:700;letter-spacing:0.18em;padding:12px 16px;text-align:center;">{{ $otp }}</p>
                 <p style="margin:0;color:#616161;font-size:14px;">This link and code expire at {{ $expiresAt->format('H:i') }}. If you did not request this sign-in message, you can safely ignore it.</p>
