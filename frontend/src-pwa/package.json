@@ -1,7 +1,7 @@
 {
     "name": "quasar-pwa-app",
     "version": "1.0.0",
-    "description": "Quasar PWA Folder",
+    "description": "Come To Code MC Kit PWA",
     "private": true,
     "type": "module",
     "dependencies": {

@@ -2,7 +2,12 @@
   <q-page class="flex flex-center q-pa-md">
     <q-card bordered flat class="full-width" style="max-width: 420px">
       <q-card-section>
-        <div class="text-h5">Enter your code</div>
+        <div class="row items-center q-gutter-sm">
+          <McKitLogo class="text-primary" size="2.5rem" />
+          <div class="text-h5">MC Kit</div>
+        </div>
+        <div class="text-caption text-grey-7">Come To Code</div>
+        <div class="text-h6 q-mt-md">Enter your code</div>
         <p class="text-body1">Enter the six-digit code from your sign-in email.</p>
 
         <q-banner v-if="error" class="bg-negative text-white q-mb-md" role="alert">
@@ -38,6 +43,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { verifyOtp } from '@/services/api/auth';
 import { useConferenceStore } from '@/stores/conference';
+import McKitLogo from '@/components/McKitLogo.vue';
 
 const otp = ref('');
 const error = ref<string | null>(null);

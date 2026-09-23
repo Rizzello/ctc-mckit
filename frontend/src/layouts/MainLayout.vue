@@ -2,6 +2,7 @@
   <q-layout view="lHh Lpr lFf">
     <q-header bordered class="bg-white text-dark">
       <q-toolbar>
+        <McKitLogo class="text-primary" size="1.75rem" />
         <q-btn
           flat
           round
@@ -77,6 +78,7 @@ import { logout } from '@/services/api/auth';
 import { resetSessionValidation } from '@/router';
 import { useConferenceStore } from '@/stores/conference';
 import { useConnectivityStore } from '@/stores/connectivity';
+import McKitLogo from '@/components/McKitLogo.vue';
 const drawer = ref(false);
 const router = useRouter();
 const conference = useConferenceStore();

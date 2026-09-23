@@ -1,11 +1,11 @@
 {
     "name": "MC Kit",
     "short_name": "MC Kit",
+    "description": "Come To Code MC Kit",
     "start_url": "/",
     "scope": "/",
-    "orientation": "portrait",
     "background_color": "#ffffff",
-    "theme_color": "#027be3",
+    "theme_color": "#1976D2",
     "display_override": ["fullscreen", "minimal-ui"],
     "display": "standalone",
     "icons": [
@@ -33,6 +33,18 @@
             "src": "icons/icon-512x512.png",
             "sizes": "512x512",
             "type": "image/png"
+        },
+        {
+            "src": "icons/icon-maskable-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/icon-maskable-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
         }
     ]
 }

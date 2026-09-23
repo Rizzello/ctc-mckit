@@ -74,3 +74,7 @@ frontend checks before opening a pull request.
 ## License
 
 MC Kit is released under the [MIT License](LICENSE).
+
+## Credits
+
+The MC Kit logo is based on the microphone icon from [Dinkie Icons](https://github.com/atelier-anchor/dinkie-icons), created by [atelierAnchor](https://github.com/atelier-anchor), a graphic and typeface design studio in Shanghai.

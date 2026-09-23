@@ -6,6 +6,8 @@
 .ai
 .agents
 .codex
+.claude
+.mcp.json
 .cursor
 .idea
 .vscode
@@ -23,6 +25,7 @@ bootstrap/cache
 tests
 coverage
 reports
+specs
 README.md
 CLAUDE.md
 AGENTS.md
