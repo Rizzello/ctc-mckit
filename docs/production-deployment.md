@@ -54,6 +54,7 @@ For a TLS deployment, set at least:
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://mckit.example.com
+APP_TIMEZONE=Europe/Rome
 SESSION_SECURE_COOKIE=true
 LOG_CHANNEL=stderr
 DB_QUEUE_RETRY_AFTER=180

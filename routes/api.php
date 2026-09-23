@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ConferenceSessionController;
 use App\Http\Controllers\Api\ConferenceSessionMcController;
 use App\Http\Controllers\Api\CurrentUserController;
 use App\Http\Controllers\Api\SessionizeStatusController;
+use App\Http\Controllers\Api\SessionKitExportController;
 use App\Http\Controllers\Api\SessionNoteController;
 use App\Http\Controllers\Api\SnapshotController;
 use App\Http\Controllers\Api\UserController;
@@ -26,6 +27,7 @@ Route::middleware('web')->prefix('v1')->group(function (): void {
     Route::middleware(['auth', EnsureOperationalAccess::class])->group(function (): void {
         Route::get('/me', CurrentUserController::class)->name('api.v1.me');
         Route::get('/snapshot', SnapshotController::class)->name('api.v1.snapshot');
+        Route::get('/export/kit', SessionKitExportController::class)->name('api.v1.export.kit');
         Route::get('/sessions', [ConferenceSessionController::class, 'index'])->name('api.v1.sessions.index');
         Route::get('/sessions/{conferenceSession}', [ConferenceSessionController::class, 'show'])->name('api.v1.sessions.show');
         Route::patch('/sessions/{conferenceSession}/mc-content', [ConferenceSessionController::class, 'updateMcContent'])->name('api.v1.sessions.mc-content');

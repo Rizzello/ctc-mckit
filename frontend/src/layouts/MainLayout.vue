@@ -41,6 +41,9 @@
           @click="drawer = false"
           ><q-item-section>Live</q-item-section></q-item
         >
+        <q-item tag="a" href="/api/v1/export/kit" clickable v-ripple @click="drawer = false"
+          ><q-item-section>Export kit</q-item-section></q-item
+        >
         <template v-if="conference.currentUser?.is_admin">
           <q-separator class="q-my-sm" />
           <q-item

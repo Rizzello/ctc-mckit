@@ -23,6 +23,17 @@ class ConferenceSessionQueryTest extends TestCase
         $this->assertSame([$early->id, $late->id], ConferenceSession::activeSchedule()->pluck('id')->all());
     }
 
+    public function test_session_timestamps_are_read_as_utc_before_local_display_conversion(): void
+    {
+        $session = ConferenceSession::factory()->create([
+            'starts_at' => CarbonImmutable::parse('2027-10-14 07:00:00 UTC'),
+        ]);
+
+        $freshSession = $session->fresh();
+
+        self::assertSame('2027-10-14T07:00:00+00:00', $freshSession?->starts_at?->toIso8601String());
+    }
+
     public function test_room_schedule_returns_active_sessions_for_the_requested_room(): void
     {
         $room = Room::factory()->create();

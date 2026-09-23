@@ -142,6 +142,30 @@ class ApiTest extends TestCase
         self::assertSame($first, $second);
     }
 
+    public function test_authenticated_users_can_download_the_session_kit_as_a_pdf(): void
+    {
+        $user = User::factory()->create();
+        $session = ConferenceSession::factory()->create([
+            'title' => 'Opening keynote',
+            'mc_description' => 'Welcome everyone.',
+            'mc_script' => 'Introduce the keynote speaker.',
+        ]);
+        $speaker = Speaker::factory()->create(['name' => 'Ada Lovelace']);
+        $session->speakers()->attach($speaker, ['sort_order' => 0]);
+        $session->mcs()->attach($user);
+        SessionNote::factory()->create(['conference_session_id' => $session->id, 'body' => 'Check the stage microphone.']);
+
+        $this->actingAs($user)->get(route('api.v1.export.kit'))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertHeader('content-disposition', 'attachment; filename=mc-kit.pdf');
+    }
+
+    public function test_guests_cannot_download_the_session_kit(): void
+    {
+        $this->get(route('api.v1.export.kit'))->assertUnauthorized();
+    }
+
     public function test_normal_users_cannot_request_removed_sessions_or_admin_resources(): void
     {
         $user = User::factory()->create();

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\UtcDateTime;
 use App\Enums\SessionizePresenceStatus;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -129,8 +130,8 @@ class ConferenceSession extends Model
     protected function casts(): array
     {
         return [
-            'starts_at' => 'datetime',
-            'ends_at' => 'datetime',
+            'starts_at' => UtcDateTime::class,
+            'ends_at' => UtcDateTime::class,
             'is_confirmed' => 'boolean',
             'is_service_session' => 'boolean',
             'is_plenum_session' => 'boolean',
