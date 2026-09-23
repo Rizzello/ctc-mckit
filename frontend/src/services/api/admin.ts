@@ -8,6 +8,7 @@ export interface SyncStatus {
 }
 
 export interface SyncRun {
+  id: number;
   status: 'queued' | 'running' | 'completed' | 'failed';
   started_at: string | null;
   finished_at: string | null;
@@ -20,4 +21,4 @@ export const createUser = (attributes: Omit<User, 'id'>) =>
 export const updateUser = (id: number, attributes: Omit<User, 'id'>) =>
   api<{ data: User }>(`/users/${id}`, { method: 'PATCH', body: JSON.stringify(attributes) });
 export const sessionizeStatus = () => api<SyncStatus>('/sessionize');
-export const queueSessionizeSync = () => api('/sessionize/sync', { method: 'POST' });
+export const queueSessionizeSync = () => api<SyncRun>('/sessionize/sync', { method: 'POST' });

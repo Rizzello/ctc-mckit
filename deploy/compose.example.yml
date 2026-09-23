@@ -1,11 +1,11 @@
 services:
   app:
-    image: ghcr.io/rizzello/ctc-mckit-app:main
+    image: ghcr.io/rizzello/ctc-mckit-app:${MC_KIT_IMAGE_TAG:?Set MC_KIT_IMAGE_TAG to the same release tag or commit SHA for app and web}
     env_file: .env
     restart: unless-stopped
 
   web:
-    image: ghcr.io/rizzello/ctc-mckit-web:main
+    image: ghcr.io/rizzello/ctc-mckit-web:${MC_KIT_IMAGE_TAG:?Set MC_KIT_IMAGE_TAG to the same release tag or commit SHA for app and web}
     ports:
       - "8080:8080"
     restart: unless-stopped
@@ -13,13 +13,13 @@ services:
       - app
 
   worker:
-    image: ghcr.io/rizzello/ctc-mckit-app:main
+    image: ghcr.io/rizzello/ctc-mckit-app:${MC_KIT_IMAGE_TAG:?Set MC_KIT_IMAGE_TAG to the same release tag or commit SHA for app and web}
     command: php artisan queue:work --sleep=1 --tries=3 --timeout=120
     env_file: .env
     restart: unless-stopped
 
   scheduler:
-    image: ghcr.io/rizzello/ctc-mckit-app:main
+    image: ghcr.io/rizzello/ctc-mckit-app:${MC_KIT_IMAGE_TAG:?Set MC_KIT_IMAGE_TAG to the same release tag or commit SHA for app and web}
     command: php artisan schedule:work
     env_file: .env
     restart: unless-stopped

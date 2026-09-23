@@ -68,12 +68,15 @@ import {
   type SyncStatus,
 } from '@/services/api/admin';
 import { useConnectivityStore } from '@/stores/connectivity';
+import { useConferenceStore } from '@/stores/conference';
 import { formatDate, formatTime } from '@/services/schedule';
 
 const connectivity = useConnectivityStore();
+const conference = useConferenceStore();
 const status = ref<SyncStatus | null>(null);
 const syncing = ref(false);
 let pollTimer: number | undefined;
+let loading = false;
 const syncInProgress = computed(() => {
   const latestSync = status.value?.last_sync;
 
@@ -103,10 +106,30 @@ watch(
 );
 
 async function load(): Promise<void> {
+  if (loading) return;
+
+  loading = true;
   try {
-    status.value = await sessionizeStatus();
+    const previousSync = status.value?.last_sync;
+    const nextStatus = await sessionizeStatus();
+    status.value = nextStatus;
+
+    const nextSync = nextStatus.last_sync;
+    const syncCompleted =
+      previousSync !== null &&
+      previousSync !== undefined &&
+      previousSync.id === nextSync?.id &&
+      previousSync.status !== 'completed' &&
+      nextSync?.status === 'completed';
+
+    if (syncCompleted) {
+      await conference.refresh();
+      Notify.create({ type: 'positive', message: 'Conference snapshot refreshed.' });
+    }
   } catch {
     Notify.create({ type: 'negative', message: 'Sessionize status could not be loaded.' });
+  } finally {
+    loading = false;
   }
 }
 

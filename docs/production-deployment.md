@@ -17,6 +17,17 @@ starting point for a deployment stack. It intentionally exposes only nginx;
 the app, worker, and scheduler share the application image and remain private
 to the Docker network.
 
+For an immutable release, set one image identifier for the entire stack. Do not
+mix `main`, release tags, or commit images between services:
+
+```dotenv
+MC_KIT_IMAGE_TAG=v1.0.0
+```
+
+The app, web, worker, and scheduler must all use that same tag (or the same
+commit SHA/digest). The publishing workflow publishes both images for semver
+Git tags such as `v1.0.0` and also preserves SHA-based tags.
+
 ## Reverse proxy and HTTPS
 
 The outer reverse proxy is responsible for TLS termination and must forward the
@@ -44,6 +55,8 @@ APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://mckit.example.com
 SESSION_SECURE_COOKIE=true
+LOG_CHANNEL=stderr
+DB_QUEUE_RETRY_AFTER=180
 ```
 
 For an intentionally plain-HTTP environment, use an `http://` `APP_URL` and
@@ -91,6 +104,18 @@ php artisan migrate --force
 Keep the `worker` and `scheduler` processes running after deployment. Without
 the worker, queued Sessionize synchronization cannot run. Monitor their logs
 and restart policy through the platform running the Compose stack.
+
+The worker intentionally uses the database queue:
+
+```text
+php artisan queue:work --sleep=1 --tries=3 --timeout=120
+```
+
+Keep `DB_QUEUE_RETRY_AFTER` greater than the worker timeout. The production
+default is `180` seconds, leaving a 60-second safety margin before a running
+job can become available for retry. Keep `LOG_CHANNEL=stderr` in production so
+Laravel and queue failures are visible directly in Dockploy/container logs;
+the local `.env.example` may continue using file-backed development logging.
 
 Back up MySQL regularly and test restoration. The database contains the
 conference schedule, user accounts, session preparation, notes, assignments,

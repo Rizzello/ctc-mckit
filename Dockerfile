@@ -12,7 +12,7 @@ WORKDIR /var/www/html
 
 RUN apk add --no-cache icu-libs libzip \
     && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS icu-dev libzip-dev \
-    && docker-php-ext-install bcmath intl pdo_mysql zip \
+    && docker-php-ext-install bcmath intl pcntl pdo_mysql zip \
     && apk del .build-deps
 
 COPY --from=vendor /var/www/html/vendor ./vendor

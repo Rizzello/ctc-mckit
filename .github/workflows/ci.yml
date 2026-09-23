@@ -99,7 +99,9 @@ jobs:
       - name: Smoke test production application image
         run: |
           docker run --rm --user www-data conference-mc-app:test sh -lc 'test -d storage/framework/cache/data && test -d storage/framework/sessions && test -d storage/framework/views && test -d storage/logs && test -d bootstrap/cache && test -w storage/framework/cache/data && test -w storage/framework/sessions && test -w storage/framework/views && test -w storage/logs && test -w bootstrap/cache && test ! -f public/index.html'
+          docker run --rm conference-mc-app:test sh -lc 'for extension in pcntl pdo_mysql intl zip; do php -m | grep -Fx "$extension"; done; php --ri pcntl'
           docker run --rm --user www-data -e APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= -e CACHE_STORE=array -e SESSION_DRIVER=array -e QUEUE_CONNECTION=sync conference-mc-app:test php artisan --version
+          docker run --rm --user www-data -e APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= -e CACHE_STORE=array -e SESSION_DRIVER=array -e QUEUE_CONNECTION=database conference-mc-app:test php artisan tinker --execute='if ((int) config("queue.connections.database.retry_after") !== 180) { exit(1); }'
       - uses: docker/build-push-action@v6
         with:
           context: .
