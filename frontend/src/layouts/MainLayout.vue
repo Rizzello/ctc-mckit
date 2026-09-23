@@ -82,11 +82,13 @@ const router = useRouter();
 const conference = useConferenceStore();
 const connectivity = useConnectivityStore();
 const connectionColor = computed(() => {
+  if (connectivity.authenticated === false) return 'warning';
   if (connectivity.offline) return 'orange';
 
   return connectivity.syncError ? 'warning' : 'positive';
 });
 const connectionLabel = computed(() => {
+  if (connectivity.authenticated === false) return 'Session expired';
   if (connectivity.offline) return 'Offline';
 
   return connectivity.syncError ? 'Connection unavailable' : 'Online';
@@ -94,6 +96,7 @@ const connectionLabel = computed(() => {
 async function signOut() {
   try {
     await logout();
+    connectivity.resetAuthentication();
     await conference.clear();
     resetSessionValidation();
     await router.replace('/login');

@@ -109,9 +109,9 @@ export interface components {
       id: number;
       sessionize_id: string;
       name: string;
-      tagline?: string | null;
-      bio?: string | null;
-      photo_url?: string | null;
+      tagline: string | null;
+      bio: string | null;
+      photo_url: string | null;
       links: unknown[];
     };
     Note: {
@@ -126,20 +126,20 @@ export interface components {
       id: number;
       sessionize_id: string;
       title: string;
-      description?: string | null;
-      room_id?: number | null;
+      description: string | null;
+      room_id: number | null;
       /** Format: date-time */
-      starts_at?: string | null;
+      starts_at: string | null;
       /** Format: date-time */
-      ends_at?: string | null;
-      status?: string | null;
+      ends_at: string | null;
+      status: string | null;
       is_confirmed: boolean;
       is_service_session: boolean;
       is_plenum_session: boolean;
       categories: string[];
-      mc_description?: string | null;
-      mc_script?: string | null;
-      room?: components['schemas']['Room'] | null;
+      mc_description: string | null;
+      mc_script: string | null;
+      room: components['schemas']['Room'] | null;
       speakers: components['schemas']['Speaker'][];
       mcs: components['schemas']['AssignedMc'][];
       notes: components['schemas']['Note'][];

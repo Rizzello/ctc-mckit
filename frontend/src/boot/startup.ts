@@ -16,5 +16,8 @@ export default boot(async ({ store }: { store: Pinia }) => {
   connectivity.initialise();
   const conference = useConferenceStore(store);
   await conference.hydrate();
+  if (connectivity.online) {
+    void connectivity.revalidateAndRefresh();
+  }
   if ('storage' in navigator) void navigator.storage.persist();
 });

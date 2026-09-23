@@ -6,7 +6,6 @@ use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureOperationalAccess
@@ -25,10 +24,6 @@ class EnsureOperationalAccess
         }
 
         Gate::forUser($user)->authorize('view-operational-content');
-
-        if (! $request->session()->has('private_cache_namespace')) {
-            $request->session()->put('private_cache_namespace', Str::random(40));
-        }
 
         return $next($request);
     }

@@ -30,7 +30,7 @@ class ConferenceSessionPolicy
      */
     public function updateMcContent(User $user, ConferenceSession $conferenceSession): bool
     {
-        return $user->enabled;
+        return $this->view($user, $conferenceSession);
     }
 
     /**

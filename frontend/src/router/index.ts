@@ -7,7 +7,12 @@ import {
 } from 'vue-router';
 import { useConnectivityStore } from '@/stores/connectivity';
 import { useConferenceStore } from '@/stores/conference';
-import { currentUser } from '@/services/api/auth';
+import {
+  currentUser,
+  getAuthLifecycleGeneration,
+  isAuthLifecycleCurrent,
+  StaleAuthValidationError,
+} from '@/services/api/auth';
 import { ApiError } from '@/services/api/client';
 
 import routes from './routes';
@@ -49,26 +54,42 @@ export default defineRouter(({ store }) => {
     const connectivity = useConnectivityStore(store);
     const isGuestRoute = to.path.startsWith('/login');
 
+    if (connectivity.authenticated === false) {
+      sessionValidated = false;
+    }
+
     if (isGuestRoute) {
       if (!connectivity.online || sessionValidated) {
         return sessionValidated ? '/agenda' : true;
       }
 
       try {
+        const generation = getAuthLifecycleGeneration();
         const user = (await currentUser()).data;
+        if (!isAuthLifecycleCurrent(generation)) {
+          return true;
+        }
+
+        connectivity.authenticated = true;
 
         if (conference.currentUser?.id !== user.id) {
           await conference.clear();
         }
 
-        if (!conference.currentUser) {
-          await conference.refresh();
-        }
+        if (!conference.currentUser) await conference.refresh();
 
         sessionValidated = true;
 
         return '/agenda';
       } catch (error) {
+        if (error instanceof StaleAuthValidationError) {
+          return true;
+        }
+
+        if (error instanceof ApiError && [401, 403].includes(error.status ?? 0)) {
+          connectivity.authenticated = false;
+        }
+
         if (!(error instanceof ApiError) || ![401, 403].includes(error.status ?? 0)) {
           connectivity.syncError = true;
         }
@@ -87,7 +108,13 @@ export default defineRouter(({ store }) => {
 
     if (!sessionValidated) {
       try {
+        const generation = getAuthLifecycleGeneration();
         const user = (await currentUser()).data;
+        if (!isAuthLifecycleCurrent(generation)) {
+          return true;
+        }
+
+        connectivity.authenticated = true;
 
         if (conference.currentUser?.id !== user.id) {
           await conference.clear();
@@ -99,9 +126,14 @@ export default defineRouter(({ store }) => {
 
         sessionValidated = true;
       } catch (error) {
+        if (error instanceof StaleAuthValidationError) {
+          return true;
+        }
+
         connectivity.syncError = true;
 
         if (error instanceof ApiError && [401, 403].includes(error.status ?? 0)) {
+          connectivity.authenticated = false;
           sessionValidated = false;
 
           return '/login';

@@ -19,9 +19,12 @@ Route::middleware('web')->prefix('v1')->group(function (): void {
         ->middleware(['guest', 'throttle:api-login-otp'])
         ->name('api.v1.auth.verify-otp');
 
+    Route::post('/logout', [AuthenticationController::class, 'logout'])
+        ->middleware('auth')
+        ->name('api.v1.logout');
+
     Route::middleware(['auth', EnsureOperationalAccess::class])->group(function (): void {
         Route::get('/me', CurrentUserController::class)->name('api.v1.me');
-        Route::post('/logout', [AuthenticationController::class, 'logout'])->name('api.v1.logout');
         Route::get('/snapshot', SnapshotController::class)->name('api.v1.snapshot');
         Route::get('/sessions', [ConferenceSessionController::class, 'index'])->name('api.v1.sessions.index');
         Route::get('/sessions/{conferenceSession}', [ConferenceSessionController::class, 'show'])->name('api.v1.sessions.show');

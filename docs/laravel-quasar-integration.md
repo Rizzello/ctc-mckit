@@ -75,15 +75,16 @@ vendor/bin/sail exec frontend npm run build:pwa
 
 ## Production build and routing
 
-The Docker build uses a Node build stage to run `npm ci` and
-`npm run build:pwa`. The resulting Quasar assets, manifest, and Workbox service
-worker are copied into Laravel's `public` directory. Node is not present in the
-runtime image.
+The web image uses a Node build stage to run `npm ci` and `npm run build:pwa`.
+That single Quasar artifact, including the manifest and Workbox service worker,
+is served by Nginx. The PHP image contains no Quasar build and Node is not
+present in either runtime image.
 
-nginx serves static assets and falls back to `index.html` for client routes such
-as `/agenda`, `/sessions`, `/live`, and `/admin/*`. It forwards API, CSRF,
-logout, magic-link, Sanctum, and health requests to Laravel/PHP-FPM instead.
-This keeps client-side history routing separate from backend endpoints.
+nginx serves `index.html` and static assets and falls back to it for client
+routes such as `/`, `/login`, `/agenda`, `/sessions`, `/live`, and `/admin/*`.
+It forwards API, CSRF, logout, magic-link, Sanctum, and health requests to
+Laravel/PHP-FPM instead. This keeps client-side history routing separate from
+backend endpoints; the signed magic-link route remains server-side.
 
 The generated Workbox service worker owns the application shell. During its
 activation it removes only obsolete MC Kit cache namespaces from the earlier

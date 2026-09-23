@@ -98,7 +98,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=app
       - name: Smoke test production application image
         run: |
-          docker run --rm --user www-data conference-mc-app:test sh -lc 'test -d storage/framework/cache/data && test -d storage/framework/sessions && test -d storage/framework/views && test -d storage/logs && test -d bootstrap/cache && test -w storage/framework/cache/data && test -w storage/framework/sessions && test -w storage/framework/views && test -w storage/logs && test -w bootstrap/cache && test -f public/index.html && test -f public/sw.js && test -f public/manifest.json'
+          docker run --rm --user www-data conference-mc-app:test sh -lc 'test -d storage/framework/cache/data && test -d storage/framework/sessions && test -d storage/framework/views && test -d storage/logs && test -d bootstrap/cache && test -w storage/framework/cache/data && test -w storage/framework/sessions && test -w storage/framework/views && test -w storage/logs && test -w bootstrap/cache && test ! -f public/index.html'
           docker run --rm --user www-data -e APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= -e CACHE_STORE=array -e SESSION_DRIVER=array -e QUEUE_CONNECTION=sync conference-mc-app:test php artisan --version
       - uses: docker/build-push-action@v6
         with:
@@ -110,4 +110,40 @@ jobs:
           cache-to: type=gha,mode=max,scope=web
       - name: Validate nginx proxy forwarding
         run: |
-          docker run --rm --add-host app:127.0.0.1 --entrypoint sh conference-mc-web:test -lc 'nginx -t && test -f /var/www/html/public/index.html && test -f /var/www/html/public/sw.js && grep -Fq "fastcgi_param HTTP_X_FORWARDED_FOR \$http_x_forwarded_for;" /etc/nginx/conf.d/default.conf && grep -Fq "fastcgi_param HTTP_X_FORWARDED_HOST \$http_x_forwarded_host;" /etc/nginx/conf.d/default.conf && grep -Fq "fastcgi_param HTTP_X_FORWARDED_PORT \$http_x_forwarded_port;" /etc/nginx/conf.d/default.conf && grep -Fq "fastcgi_param HTTP_X_FORWARDED_PROTO \$http_x_forwarded_proto;" /etc/nginx/conf.d/default.conf && grep -Fq "try_files \$uri \$uri/ /index.html;" /etc/nginx/conf.d/default.conf'
+          docker run --rm --entrypoint sh conference-mc-web:test -lc 'test -f /var/www/html/public/index.html && test -f /var/www/html/public/manifest.json && test -f /var/www/html/public/sw.js && grep -Fq "index index.html;" /etc/nginx/conf.d/default.conf && grep -Fq "fastcgi_param HTTP_X_FORWARDED_FOR \$http_x_forwarded_for;" /etc/nginx/conf.d/default.conf && grep -Fq "fastcgi_param HTTP_X_FORWARDED_HOST \$http_x_forwarded_host;" /etc/nginx/conf.d/default.conf && grep -Fq "fastcgi_param HTTP_X_FORWARDED_PORT \$http_x_forwarded_port;" /etc/nginx/conf.d/default.conf && grep -Fq "fastcgi_param HTTP_X_FORWARDED_PROTO \$http_x_forwarded_proto;" /etc/nginx/conf.d/default.conf && grep -Fq "try_files \$uri \$uri/ /index.html;" /etc/nginx/conf.d/default.conf && grep -Fq "^\\/login\\/magic\\/" /var/www/html/public/sw.js && grep -Fq "^\\/api\\/" /var/www/html/public/sw.js && grep -Fq "^\\/up\$" /var/www/html/public/sw.js'
+      - name: Smoke test the production web image
+        run: |
+          set -eu
+          docker network create mckit-smoke
+          trap 'docker rm -f mckit-web mckit-app >/dev/null 2>&1 || true; docker network rm mckit-smoke >/dev/null 2>&1 || true' EXIT
+          docker run -d --name mckit-app --network mckit-smoke --network-alias app \
+            -e APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= \
+            -e APP_ENV=testing -e APP_DEBUG=false -e CACHE_STORE=array \
+            -e SESSION_DRIVER=array -e QUEUE_CONNECTION=sync \
+            conference-mc-app:test php-fpm -F
+          docker run -d --name mckit-web --network mckit-smoke --link mckit-app:app -p 18080:8080 conference-mc-web:test
+          backend_ready=false
+          for attempt in $(seq 1 30); do
+            if curl --silent --show-error --fail http://127.0.0.1:18080/up >/dev/null; then
+              backend_ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [ "$backend_ready" != true ]; then
+            docker logs mckit-app
+            docker logs mckit-web
+            exit 1
+          fi
+          curl --silent --show-error --fail http://127.0.0.1:18080/ >/tmp/mckit-index.html
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:18080/)" = 200
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:18080/agenda)" = 200
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:18080/login)" = 200
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:18080/up)" = 200
+          test "$(curl --silent --header 'Accept: application/json' --output /tmp/mckit-api.json --write-out '%{http_code}' http://127.0.0.1:18080/api/v1/me)" = 401
+          grep -Fq 'Unauthenticated' /tmp/mckit-api.json
+          test "$(curl --silent --output /tmp/mckit-magic.html --write-out '%{http_code}' http://127.0.0.1:18080/login/magic/invalid/invalid)" = 302
+          ! grep -Fq '<div id=q-app>' /tmp/mckit-magic.html
+          grep -oE 'assets/[^" ]+' /tmp/mckit-index.html | sort -u | while read -r asset; do
+            docker exec mckit-web test -f "/var/www/html/public/$asset"
+          done

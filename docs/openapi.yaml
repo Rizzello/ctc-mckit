@@ -48,7 +48,7 @@ components:
       properties: { id: { type: integer }, sessionize_id: { type: string }, name: { type: string } }
     Speaker:
       type: object
-      required: [id, sessionize_id, name, links]
+      required: [id, sessionize_id, name, tagline, bio, photo_url, links]
       properties:
         id: { type: integer }
         sessionize_id: { type: string }
@@ -63,7 +63,7 @@ components:
       properties: { id: { type: integer }, body: { type: string }, created_at: { type: string, format: date-time }, updated_at: { type: string, format: date-time } }
     Session:
       type: object
-      required: [id, sessionize_id, title, is_confirmed, is_service_session, is_plenum_session, categories, speakers, mcs, notes]
+      required: [id, sessionize_id, title, description, room_id, starts_at, ends_at, status, is_confirmed, is_service_session, is_plenum_session, categories, mc_description, mc_script, room, speakers, mcs, notes]
       properties:
         id: { type: integer }
         sessionize_id: { type: string }

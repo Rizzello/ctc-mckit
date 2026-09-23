@@ -187,6 +187,15 @@ export default defineConfig((/* ctx */) => {
       extendPWAGenerateSWOptions(cfg) {
         cfg.runtimeCaching = [];
         cfg.importScripts = ['legacy-cache-cleanup.js'];
+        cfg.navigateFallbackDenylist = [
+          ...(cfg.navigateFallbackDenylist ?? []),
+          /^\/api\//,
+          /^\/csrf-cookie$/,
+          /^\/login\/magic\//,
+          /^\/logout$/,
+          /^\/sanctum\//,
+          /^\/up$/,
+        ];
       },
       // swFilename: 'sw.js',
       // manifestFilename: 'manifest.json',

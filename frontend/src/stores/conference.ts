@@ -4,6 +4,10 @@ import { fetchSnapshot } from '@/services/api/snapshot';
 import type { ConferenceSession, Snapshot } from '@/types/models';
 import { useConnectivityStore } from './connectivity';
 
+let lifecycleGeneration = 0;
+let refreshState: { generation: number; promise: Promise<void> } | null = null;
+let durableWrite: Promise<void> | null = null;
+
 export const useConferenceStore = defineStore('conference', {
   state: () => ({ snapshot: null as Snapshot | null, ready: false, noOfflineSnapshot: false }),
   getters: {
@@ -27,33 +31,79 @@ export const useConferenceStore = defineStore('conference', {
     },
     async refresh(): Promise<void> {
       const connectivity = useConnectivityStore();
-      if (!connectivity.online) return;
+      if (!connectivity.online) {
+        return;
+      }
+
+      const generation = lifecycleGeneration;
+      if (refreshState?.generation === generation) {
+        return refreshState.promise;
+      }
+
+      const promise = this.performRefresh(generation).finally(() => {
+        if (refreshState?.generation === generation) {
+          refreshState = null;
+        }
+      });
+      refreshState = { generation, promise };
+
+      return promise;
+    },
+    async performRefresh(generation: number): Promise<void> {
+      const connectivity = useConnectivityStore();
       connectivity.syncing = true;
       connectivity.syncError = false;
       try {
         const payload = await fetchSnapshot();
-        const stored = await db.snapshots.get('active');
-        if (stored && stored.ownerId !== payload.current_user.id) await db.snapshots.clear();
-        await replaceSnapshot({
+        if (generation !== lifecycleGeneration) {
+          return;
+        }
+
+        const write = replaceSnapshot({
           key: 'active',
           ownerId: payload.current_user.id,
           version: payload.version,
           generatedAt: payload.generated_at,
           payload,
         });
+        durableWrite = write;
+        try {
+          await write;
+        } finally {
+          if (durableWrite === write) {
+            durableWrite = null;
+          }
+        }
+
+        if (generation !== lifecycleGeneration) {
+          return;
+        }
+
         this.snapshot = payload;
         this.noOfflineSnapshot = false;
         connectivity.lastSyncAt = payload.generated_at;
       } catch {
-        connectivity.syncError = true;
+        if (generation === lifecycleGeneration) {
+          connectivity.syncError = true;
+        }
       } finally {
-        connectivity.syncing = false;
+        if (generation === lifecycleGeneration) {
+          connectivity.syncing = false;
+        }
       }
     },
     async clear(): Promise<void> {
+      lifecycleGeneration += 1;
+      refreshState = null;
+
+      if (durableWrite) {
+        await durableWrite;
+      }
+
       await db.snapshots.clear();
       this.snapshot = null;
       this.noOfflineSnapshot = true;
+      useConnectivityStore().syncing = false;
     },
   },
 });

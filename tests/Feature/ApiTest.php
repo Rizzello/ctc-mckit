@@ -177,6 +177,26 @@ class ApiTest extends TestCase
         self::assertSame('Imported title', $session->fresh()->title);
     }
 
+    public function test_normal_users_cannot_update_removed_session_mc_content(): void
+    {
+        $user = User::factory()->create();
+        $session = ConferenceSession::factory()->removed()->create();
+
+        $this->actingAs($user)->patchJson(route('api.v1.sessions.mc-content', $session), [
+            'mc_description' => 'Should not be saved.',
+        ])->assertForbidden();
+    }
+
+    public function test_admins_can_update_removed_session_mc_content(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $session = ConferenceSession::factory()->removed()->create();
+
+        $this->actingAs($admin)->patchJson(route('api.v1.sessions.mc-content', $session), [
+            'mc_description' => 'Administrative correction.',
+        ])->assertOk()->assertJsonPath('data.mc_description', 'Administrative correction.');
+    }
+
     public function test_only_admins_can_mutate_notes_and_mc_assignments(): void
     {
         $user = User::factory()->create();
@@ -235,6 +255,14 @@ class ApiTest extends TestCase
     public function test_api_logout_invalidates_the_authenticated_session(): void
     {
         $user = User::factory()->create();
+
+        $this->actingAs($user)->postJson(route('api.v1.logout'))->assertNoContent();
+        $this->assertGuest();
+    }
+
+    public function test_disabled_users_can_logout_without_operational_access(): void
+    {
+        $user = User::factory()->create(['enabled' => false]);
 
         $this->actingAs($user)->postJson(route('api.v1.logout'))->assertNoContent();
         $this->assertGuest();

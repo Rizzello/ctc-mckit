@@ -11,6 +11,7 @@
 .vscode
 .zed
 node_modules
+frontend/dist
 vendor
 public/build
 public/hot
