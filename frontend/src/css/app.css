@@ -107,6 +107,10 @@
     overflow-y: auto;
 }
 
+.whitespace-pre-line {
+    white-space: pre-line;
+}
+
 .live-status-badge {
     display: inline-flex;
     flex-shrink: 0;
