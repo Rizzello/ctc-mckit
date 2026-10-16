@@ -88,7 +88,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v3
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           target: app
@@ -102,7 +102,7 @@ jobs:
           docker run --rm conference-mc-app:test sh -lc 'for extension in pcntl pdo_mysql intl zip; do php -m | grep -Fx "$extension"; done; php --ri pcntl'
           docker run --rm --user www-data -e APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= -e CACHE_STORE=array -e SESSION_DRIVER=array -e QUEUE_CONNECTION=sync conference-mc-app:test php artisan --version
           docker run --rm --user www-data -e APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= -e CACHE_STORE=array -e SESSION_DRIVER=array -e QUEUE_CONNECTION=database conference-mc-app:test php artisan tinker --execute='if ((int) config("queue.connections.database.retry_after") !== 180) { exit(1); }'
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/nginx/Dockerfile
